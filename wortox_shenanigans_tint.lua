@@ -3,11 +3,9 @@
 -- the wortox_shenanigans_tint table below.
 
 -- Look of Wortox's shadows: Maxwell's flat silhouette, coloured by Wortox's
--- skill tree. The black multiply is Maxwell's own (it erases every skin and
--- tool detail, alpha .5 is his translucency) and the add colour fills the
--- silhouette. The anim shader weights the add by the texel's alpha, so only
--- the shape is coloured, never the empty space around it.
-local MINION_MULT = { 0, 0, 0, .5 }
+-- skill tree. A black multiply (Maxwell's own, it erases every skin and tool
+-- detail) is filled by an add colour. The anim shader weights the add by the
+-- texel's alpha, so only the shape is coloured, never the space around it.
 
 -- The lean sets the base: Neutral is crimson, Nice a pinkish red, Naughty a
 -- deep blood red toward Maxwell's black. The allegiance tints it: Shadow
@@ -21,32 +19,41 @@ local PALETTE =
     --  no allegiance                lunar                      shadow
     { 0xFF6F91 --[[Rose]],        0x7FE8FF --[[Moonbeam]],  0xA0206A --[[Dusk Rose]] }, -- nice
     { 0xDC143C --[[Crimson]],     0x2FD0F0 --[[Gestalt]],   0x7A0A3A --[[Wine]]    },   -- neutral
-    { 0x8A0A22 --[[Blood]],       0x1580B0 --[[Deep Moon]], 0x4E0418 --[[Void Red]] },  -- naughty
+    { 0x8A0A22 --[[Blood]],       0x2A9ED4 --[[Deep Moon]], 0x4E0418 --[[Void Red]] },  -- naughty
 }
--- Per allegiance. The anim shader lights a pixel by max(world light, light
--- override), so the override keeps the colour readable at night. Lunar glows
--- through the bloom pass the way gestalts do.
-local ALLEGIANCE_GLOW =
+-- Per allegiance.
+-- alpha: opacity. Maxwell's .5 lets the ground show through, which makes deep
+--   reds close to the ground's brightness, and the eye blurs edges between
+--   colours of equal brightness. The red columns go more opaque so they sit
+--   clearly darker than the terrain; Lunar keeps a gestalt's translucency.
+-- light: the shader lights a pixel by max(world light, override), so this
+--   keeps the colour readable at night.
+-- bloom: Lunar glows through the bloom pass the way gestalts do.
+local ALLEGIANCE_STYLE =
 {
-    { light = .3 },               -- no allegiance
-    { light = .55, bloom = true }, -- lunar
-    { light = .3 },               -- shadow
+    { alpha = .65, light = .3 },               -- no allegiance
+    { alpha = .5, light = .55, bloom = true }, -- lunar
+    { alpha = .75, light = .3 },               -- shadow
 }
+-- The despawn fx keep their vanilla .5 multiply alpha.
+local FX_ALPHA = .5
 local LEAN_ROW = { nice = 1, neutral = 2, naughty = 3 }
 local ALLEGIANCE_COLUMN = { none = 1, lunar = 2, shadow = 3 }
 local BLOOM_SHADER = "shaders/anim.ksh"
 
 -- Flattened row by row to indices 1..9 so one small network byte carries
--- the tint. Half strength: with alpha .5 the add shows the full colour.
+-- the tint.
 local TINTS = {}
 for _, row in ipairs(PALETTE) do
     for column, hex in ipairs(row) do
+        local style = ALLEGIANCE_STYLE[column]
         table.insert(TINTS, {
-            r = math.floor(hex / 0x10000) % 0x100 / 255 * .5,
-            g = math.floor(hex / 0x100) % 0x100 / 255 * .5,
-            b = hex % 0x100 / 255 * .5,
-            light = ALLEGIANCE_GLOW[column].light,
-            bloom = ALLEGIANCE_GLOW[column].bloom,
+            r = math.floor(hex / 0x10000) % 0x100 / 255,
+            g = math.floor(hex / 0x100) % 0x100 / 255,
+            b = hex % 0x100 / 255,
+            alpha = style.alpha,
+            light = style.light,
+            bloom = style.bloom,
         })
     end
 end
@@ -95,16 +102,18 @@ local function ApplyGlow(inst, tint)
     end
 end
 
+-- The shader clamps colour to alpha (premultiplied), so the add is scaled by
+-- the same alpha to show the palette colour at full strength.
 local function ApplyMinionTint(inst, tint)
-    inst.AnimState:SetMultColour(MINION_MULT[1], MINION_MULT[2], MINION_MULT[3], MINION_MULT[4])
-    inst.AnimState:SetAddColour(tint.r, tint.g, tint.b, 0)
+    inst.AnimState:SetMultColour(0, 0, 0, tint.alpha)
+    inst.AnimState:SetAddColour(tint.r * tint.alpha, tint.g * tint.alpha, tint.b * tint.alpha, 0)
     ApplyGlow(inst, tint)
 end
 
 -- The despawn smoke art is near black, so a multiply cannot colour it; the
 -- add does, and the fx keep their vanilla multiply.
 local function ApplyFxTint(inst, tint)
-    inst.AnimState:SetAddColour(tint.r, tint.g, tint.b, 0)
+    inst.AnimState:SetAddColour(tint.r * FX_ALPHA, tint.g * FX_ALPHA, tint.b * FX_ALPHA, 0)
     ApplyGlow(inst, tint)
 end
 

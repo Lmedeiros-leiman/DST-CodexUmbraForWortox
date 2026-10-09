@@ -275,29 +275,30 @@ local function spawn_fx(prefab, env)
     return fx
 end
 
--- Palette hex -> the add colour the mod sends (half strength, see the mod).
-local function tint_add(hex)
+-- Palette hex scaled by an alpha: the add colour the mod sends.
+local function tint_add(hex, alpha)
     return {
-        math.floor(hex / 0x10000) % 0x100 / 255 * .5,
-        math.floor(hex / 0x100) % 0x100 / 255 * .5,
-        hex % 0x100 / 255 * .5,
+        math.floor(hex / 0x10000) % 0x100 / 255 * alpha,
+        math.floor(hex / 0x100) % 0x100 / 255 * alpha,
+        hex % 0x100 / 255 * alpha,
     }
 end
 
 local CRIMSON = 0xDC143C
+local FX_ALPHA = .5
 
--- Allegiance glow per palette colour: light override and gestalt bloom.
-local GLOW =
+-- Allegiance style per palette colour: opacity, light override, gestalt bloom.
+local STYLE =
 {
-    [0xFF6F91] = { .3 }, [0xDC143C] = { .3 }, [0x8A0A22] = { .3 },
-    [0x7FE8FF] = { .55, true }, [0x2FD0F0] = { .55, true }, [0x1580B0] = { .55, true },
-    [0xA0206A] = { .3 }, [0x7A0A3A] = { .3 }, [0x4E0418] = { .3 },
+    [0xFF6F91] = { .65, .3 }, [0xDC143C] = { .65, .3 }, [0x8A0A22] = { .65, .3 },
+    [0x7FE8FF] = { .5, .55, true }, [0x2FD0F0] = { .5, .55, true }, [0x2A9ED4] = { .5, .55, true },
+    [0xA0206A] = { .75, .3 }, [0x7A0A3A] = { .75, .3 }, [0x4E0418] = { .75, .3 },
 }
 
 local function assert_glow(anim, hex, label)
-    local glow = GLOW[hex]
-    assert_eq(anim.light_override, glow[1], label .. " light override")
-    if glow[2] then
+    local style = STYLE[hex]
+    assert_eq(anim.light_override, style[2], label .. " light override")
+    if style[3] then
         assert_eq(anim.bloom, "shaders/anim.ksh", label .. " blooms like a gestalt")
     else
         assert_eq(anim.bloom, nil, label .. " has no bloom")
@@ -305,9 +306,9 @@ local function assert_glow(anim, hex, label)
     end
 end
 
-local function assert_add(calls, hex, label)
+local function assert_add(calls, hex, alpha, label)
     local add = calls[#calls] or {}
-    local expected = tint_add(hex)
+    local expected = tint_add(hex, alpha)
     assert_near(add[1], expected[1], label .. " red")
     assert_near(add[2], expected[2], label .. " green")
     assert_near(add[3], expected[3], label .. " blue")
@@ -315,10 +316,11 @@ local function assert_add(calls, hex, label)
 end
 
 local function assert_minion_tint(anim, hex, label)
+    local alpha = STYLE[hex][1]
     local mult = anim.colour_calls[#anim.colour_calls] or {}
-    assert_true(mult[1] == 0 and mult[2] == 0 and mult[3] == 0 and mult[4] == .5,
-        label .. " uses Maxwell's black silhouette multiply")
-    assert_add(anim.add_colour_calls, hex, label .. " fill")
+    assert_true(mult[1] == 0 and mult[2] == 0 and mult[3] == 0 and mult[4] == alpha,
+        label .. " uses a black silhouette multiply at its allegiance opacity")
+    assert_add(anim.add_colour_calls, hex, alpha, label .. " fill")
     assert_glow(anim, hex, label)
     assert_eq(#anim.symbol_colour_calls + #anim.symbol_add_colour_calls, 0,
         label .. " leaves tools in the same silhouette")
@@ -736,7 +738,7 @@ do
         local label = fx.prefab .. " #" .. i
         assert_eq(fx._wortoxshen_tint ~= nil and fx._wortoxshen_tint:value(), 4,
             label .. " carries the minion's tint index for clients")
-        assert_add(fx.AnimState.add_colour_calls, CRIMSON, label .. " add colour")
+        assert_add(fx.AnimState.add_colour_calls, CRIMSON, FX_ALPHA, label .. " add colour")
         assert_glow(fx.AnimState, CRIMSON, label)
         assert_eq(#fx.AnimState.colour_calls, 0, label .. " keeps its vanilla multiply")
     end
@@ -775,7 +777,7 @@ do
     local expected =
     {
         { nil, nil, 0xDC143C }, { "nice", nil, 0xFF6F91 }, { "naughty", nil, 0x8A0A22 },
-        { nil, "lunar", 0x2FD0F0 }, { "nice", "lunar", 0x7FE8FF }, { "naughty", "lunar", 0x1580B0 },
+        { nil, "lunar", 0x2FD0F0 }, { "nice", "lunar", 0x7FE8FF }, { "naughty", "lunar", 0x2A9ED4 },
         { nil, "shadow", 0x7A0A3A }, { "nice", "shadow", 0xA0206A }, { "naughty", "shadow", 0x4E0418 },
     }
     for _, case in ipairs(expected) do
@@ -813,7 +815,7 @@ do
 
     inst.components.skilltreeupdater.active.wortox_allegiance_lunar = true
     inst:PushEvent("onactivateskill_server", { skill = "wortox_allegiance_lunar" })
-    assert_minion_tint(pet.AnimState, 0x1580B0, "after joining the moon")
+    assert_minion_tint(pet.AnimState, 0x2A9ED4, "after joining the moon")
     inst.components.skilltreeupdater.active.wortox_allegiance_lunar = nil
     inst:PushEvent("ondeactivateskill_server", { skill = "wortox_allegiance_lunar" })
     assert_eq(pet.AnimState.bloom, nil, "leaving the moon drops the gestalt bloom")
@@ -976,7 +978,7 @@ do
     flute.components.instrument.onplayed(flute, wortox)
     assert_eq(#env.dancers, 2, "a spot without walkable ground gets no dancer")
     for i, dancer in ipairs(env.dancers) do
-        assert_minion_tint(dancer.AnimState, 0x1580B0, "naughty lunar dancer " .. i)
+        assert_minion_tint(dancer.AnimState, 0x2A9ED4, "naughty lunar dancer " .. i)
     end
 end
 
