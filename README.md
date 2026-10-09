@@ -2,7 +2,7 @@
 
 <img src="modicon.png" alt="Mod icon: Wortox next to the Codex Umbra" width="128" align="right">
 
-[English](#english) · [Português](#português) · [简体中文](#简体中文)
+[English](#english) · [Português](#português) · [简体中文](#简体中文) · [Русский](#русский)
 
 ## English
 
@@ -38,10 +38,10 @@ A Don't Starve Together mod that teaches Wortox Maxwell's shadow magic.
 
 ### Languages
 
-The mod list text and Wortox's lines are in English, Portuguese (Brazil) and Simplified Chinese (Steam and WeGame); any other language uses English.
+The mod list text and Wortox's lines are in English, Portuguese (Brazil), Simplified Chinese (Steam and WeGame) and Russian; any other language uses English.
 
 - The mod list text follows each player's own game language.
-- Wortox's lines are resolved on the server, so everyone hears the same language. The `Language` option picks it: `Auto` (default) uses the server's language, or force `English`, `Português` or `简体中文`.
+- Wortox's lines are resolved on the server, so everyone hears the same language. The `Language` option picks it: `Auto` (default) uses the server's language, or force `English`, `Português`, `简体中文` or `Русский`.
 - A world hosted from the game menu takes the host's game language each time it starts (`cluster_language` in `cluster.ini`). A standalone dedicated server sets `cluster_language` by hand.
 
 ### Local install
@@ -90,10 +90,10 @@ Mod para Don't Starve Together que ensina ao Wortox a magia de sombra do Maxwell
 
 ### Idiomas
 
-O texto da lista de mods e as falas do Wortox estão em inglês, português (Brasil) e chinês simplificado (Steam e WeGame); outros idiomas usam inglês.
+O texto da lista de mods e as falas do Wortox estão em inglês, português (Brasil), chinês simplificado (Steam e WeGame) e russo; outros idiomas usam inglês.
 
 - O texto da lista de mods segue o idioma do jogo de cada jogador.
-- As falas do Wortox são resolvidas no servidor, então todos ouvem o mesmo idioma. A opção `Idioma` escolhe qual: `Automático` (padrão) usa o idioma do servidor, ou force `English`, `Português` ou `简体中文`.
+- As falas do Wortox são resolvidas no servidor, então todos ouvem o mesmo idioma. A opção `Idioma` escolhe qual: `Automático` (padrão) usa o idioma do servidor, ou force `English`, `Português`, `简体中文` ou `Русский`.
 - Um mundo hospedado pelo menu do jogo pega o idioma do jogo de quem hospeda toda vez que inicia (`cluster_language` no `cluster.ini`). Um servidor dedicado avulso define `cluster_language` à mão.
 
 ### Instalação local
@@ -142,10 +142,10 @@ O texto da lista de mods e as falas do Wortox estão em inglês, português (Bra
 
 ### 语言
 
-模组列表文本和沃拓克斯的台词支持英语、葡萄牙语（巴西）和简体中文（Steam 与 WeGame）；其他语言使用英语。
+模组列表文本和沃拓克斯的台词支持英语、葡萄牙语（巴西）、简体中文（Steam 与 WeGame）和俄语；其他语言使用英语。
 
 - 模组列表文本跟随每位玩家自己的游戏语言。
-- 沃拓克斯的台词在服务器上生成，所以所有人听到的是同一种语言。`语言`选项决定使用哪种：`自动`（默认）跟随服务器语言，也可以强制使用 `English`、`Português` 或 `简体中文`。
+- 沃拓克斯的台词在服务器上生成，所以所有人听到的是同一种语言。`语言`选项决定使用哪种：`自动`（默认）跟随服务器语言，也可以强制使用 `English`、`Português`、`简体中文` 或 `Русский`。
 - 从游戏菜单创建的世界每次启动时都会使用主机的游戏语言（`cluster.ini` 中的 `cluster_language`）。独立的专用服务器需要手动设置 `cluster_language`。
 
 ### 本地安装
@@ -160,19 +160,73 @@ O texto da lista de mods e as falas do Wortox estão em inglês, português (Bra
 - 暗影傀儡无动画出现时的快速烟雾，以及更换皮肤时的烟雾仍是黑色：它们只在客户端显示，模组无法上色。
 - 模组会添加 `shadowmagic` 标签，因此也会显示麦斯威尔的暗影制作栏。魔术师高礼帽和魔术师箱子的配方会出现，但沃拓克斯没有魔术师能力，所以高礼帽只是一顶普通帽子。
 
-## Tests / Testes / 测试
+## Русский
 
-Requires Lua 5.1. / Requer Lua 5.1. / 需要 Lua 5.1。
+Мод для Don't Starve Together, который учит Вортокса теневой магии Максвелла.
+
+### Кодекс Умбра
+
+- Вортокс создаёт Кодекс Умбра во вкладке теней Максвелла (2 папируса, 2 топлива кошмара, 50 здоровья).
+- Кодекс призывает теневых слуг и партнёров, ставит теневые уловки и клетки и тратит топливо кошмара, как у Максвелла.
+- Каждая тень снижает максимальный рассудок Вортокса, как у Максвелла (15% за слугу, предел 90%).
+- Тени исчезают, когда Вортокс умирает, становится призраком, меняет персонажа или переходит между поверхностью и пещерами.
+- Тени — полупрозрачные силуэты, как у Максвелла, и копируют скин Вортокса (включая смену в гардеробе); скин виден в форме силуэта. Инструменты и оружие — часть того же силуэта.
+- Цвет зависит от древа навыков Вортокса. Наклонности задают основу: нейтральный — малиновый, благой — розово-красный, озорной — тёмно-кровавый, почти чёрный, как у Максвелла. Союз добавляет оттенок: теневой затемняет всё в сторону винного и фиолетового (озорной — самый тёмный), лунный делает тень светящейся голубой, как гештальт. Уже призванные тени сразу меняют цвет при смене навыков.
+
+  | Наклонности / Союз | Нет | Лунный | Теневой |
+  |---|---|---|---|
+  | Благие | Rose `#FF6F91` | Moonbeam `#7FE8FF` | Dusk Rose `#A0206A` |
+  | Нейтральные | Crimson `#DC143C` (по умолчанию) | Gestalt `#2FD0F0` | Wine `#7A0A3A` |
+  | Озорные | Blood `#8A0A22` | Deep Moon `#2A9ED4` | Void Red `#4E0418` |
+
+- Тени немного светятся сами, чтобы их было видно ночью; лунные — сильнее всех.
+- Непрозрачность зависит от союза: 65% без союза, 75% у теневого, 50% у лунного. Красные тени заметно темнее земли и с чёткими краями; лунные остаются полупрозрачными, как гештальт.
+- Дым и пятно при исчезновении тени окрашены в её цвет. Тени Максвелла остаются чёрными.
+- Тени Вортокса можно осмотреть: у хозяина, другого Вортокса, Максвелла и остальных персонажей свои реплики. Тени Максвелла, как и в оригинале, осмотреть нельзя.
+- У Вортокса свои реплики про Кодекс.
+
+### Труппа флейты
+
+- Когда Вортокс играет на флейте Пана, держа при себе Кодекс Умбра (в инвентаре, на курсоре или в рюкзаке), вокруг него появляются три теневых танцора с его скином и цветом древа навыков.
+- Они танцуют около 10 секунд и исчезают в дыму того же цвета. Повторная игра заменяет труппу, а не добавляет танцоров.
+- Это только визуальный эффект: они не считаются тенями-слугами, не тратят рассудок, не сохраняются и не засыпают от флейты.
+- У труппы своя настройка. Если настройка «Кодекс Умбра» выключена, Вортокс не может создать книгу, но Кодекс Максвелла при нём всё равно призывает труппу.
+
+### Языки
+
+Текст в списке модов и реплики Вортокса доступны на английском, португальском (Бразилия), упрощённом китайском (Steam и WeGame) и русском; остальные языки используют английский.
+
+- Текст в списке модов следует языку игры каждого игрока.
+- Реплики Вортокса формируются на сервере, поэтому все слышат один язык. Его выбирает настройка «Язык»: «Авто» (по умолчанию) следует языку сервера, либо можно выбрать `English`, `Português`, `简体中文` или `Русский`.
+- Мир, запущенный из меню игры, при каждом запуске берёт язык игры хоста (`cluster_language` в `cluster.ini`). На отдельном выделенном сервере `cluster_language` задаётся вручную.
+
+### Локальная установка
+
+1. Закройте Don't Starve Together.
+2. Скопируйте `modinfo.lua`, `modmain.lua`, `modicon.tex`, `modicon.xml` и файлы `wortox_shenanigans_*.lua` в `mods/wortox_shenanigans` в папке игры.
+3. Включите мод для сервера и выберите настройки «Кодекс Умбра», «Труппа флейты» и «Язык».
+4. Перезапустите сервер после изменения настроек или файлов мода.
+
+### Примечания
+
+- Быстрая вспышка при появлении тени без анимации и вспышка при смене скина остаются чёрными: их графика существует только у клиентов, и мод не может её окрасить.
+- Мод добавляет тег `shadowmagic`, поэтому появляется и вкладка теневого крафта Максвелла. Рецепты цилиндра и сундука фокусника видны, но у Вортокса нет способностей фокусника, так что цилиндр работает как обычная шляпа.
+
+## Tests / Testes / 测试 / Тесты
+
+Requires Lua 5.1. / Requer Lua 5.1. / 需要 Lua 5.1。 / Требуется Lua 5.1.
 
 ```bash
 lua5.1 test/test_mod.lua
 luac5.1 -p modinfo.lua modmain.lua wortox_shenanigans_tint.lua wortox_shenanigans_codex.lua wortox_shenanigans_panflute.lua test/test_mod.lua
 ```
 
-## Credits / Créditos / 致谢
+## Credits / Créditos / 致谢 / Благодарности
 
 Don't Starve Together, Wortox, Maxwell and the Codex Umbra belong to Klei Entertainment. The mod icon is assembled from game art (Wortox's avatar and the Codex Umbra inventory icon). This is an unofficial fan mod, not made or endorsed by Klei.
 
 Don't Starve Together, Wortox, Maxwell e o Codex Umbra pertencem à Klei Entertainment. O ícone do mod foi montado com arte do jogo (o avatar do Wortox e o ícone do Codex Umbra). Este é um mod de fã não oficial, sem vínculo com a Klei.
 
 《饥荒联机版》、沃拓克斯、麦斯威尔和暗影秘典属于 Klei Entertainment。模组图标使用游戏美术素材制作（沃拓克斯的头像和暗影秘典的物品图标）。这是非官方的玩家模组，与 Klei 无关。
+
+Don't Starve Together, Вортокс, Максвелл и Кодекс Умбра принадлежат Klei Entertainment. Иконка мода собрана из игровой графики (аватар Вортокса и иконка Кодекса Умбра). Это неофициальный фанатский мод, не связанный с Klei.

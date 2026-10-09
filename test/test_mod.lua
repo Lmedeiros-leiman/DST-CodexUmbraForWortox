@@ -1011,8 +1011,8 @@ do
         }
     end
     local en, pt, fr, none = lines_for("en"), lines_for("pt"), lines_for("fr"), lines_for(nil)
-    assert_eq(pt[1], "Chega, chega! Minha mente já não sossega!", "Portuguese max sanity line")
-    assert_eq(pt[2], "Magia de sombra, que delícia! Agora é minha essa malícia, huehue!", "Portuguese Codex line")
+    assert_eq(pt[1], "Não cabe mais nada! Que mente assombrada!", "Portuguese max sanity line")
+    assert_eq(pt[2], "Magia das sombras, que delícia! Agora é minha essa malícia, huehue!", "Portuguese Codex line")
     assert_eq(pt[4], "Minha sombra, meu par, parceira pra aprontar!", "Portuguese own-shadow line")
     for i = 1, #en do
         assert_true(type(pt[i]) == "string" and pt[i] ~= en[i], "line " .. i .. " has its own Portuguese text")
@@ -1023,13 +1023,23 @@ do
     -- The language option overrides the server's game language.
     -- Simplified Chinese, on Steam ("zh") and on WeGame ("zhr").
     local zh, zhr, zht = lines_for("zh"), lines_for("zhr"), lines_for("zht")
-    assert_eq(zh[1], "不行不行！我的脑袋里塞满了阴影！", "Chinese max sanity line")
-    assert_eq(zh[2], "他的暗影戏法，现在由我来耍，哼哼！", "Chinese Codex line in Wortox's official laugh")
+    assert_eq(zh[1], "脑中没空位，暗影挤成堆！", "Chinese max sanity line")
+    assert_eq(zh[2], "他的暗影戏法，如今归我耍，哼哼！", "Chinese Codex line in Wortox's official laugh")
     for i = 1, #en do
         assert_true(type(zh[i]) == "string" and zh[i] ~= en[i] and zh[i] ~= pt[i], "line " .. i .. " has its own Chinese text")
         assert_eq(zhr[i], zh[i], "line " .. i .. " uses Chinese on the WeGame release")
         assert_eq(zht[i], en[i], "line " .. i .. " stays English for Traditional Chinese")
         assert_eq(lines_for("en", "zh")[i], zh[i], "line " .. i .. " forced to Chinese")
+    end
+
+    -- Russian.
+    local ru = lines_for("ru")
+    assert_eq(ru[2], "Его теневые штучки теперь в моих ручках, хо-хо!", "Russian Codex line in Wortox's official laugh")
+    assert_eq(ru[4], "Моя тень, мой двойник, мой напарник-озорник!", "Russian own-shadow line")
+    for i = 1, #en do
+        assert_true(type(ru[i]) == "string" and ru[i] ~= en[i] and ru[i] ~= pt[i] and ru[i] ~= zh[i],
+            "line " .. i .. " has its own Russian text")
+        assert_eq(lines_for("en", "ru")[i], ru[i], "line " .. i .. " forced to Russian")
     end
 
     local forced_pt, forced_en = lines_for("en", "pt"), lines_for("pt", "en")
@@ -1056,6 +1066,11 @@ do
     assert_eq(modinfo_for("zhr").name, zh.name, "WeGame Chinese gets the Chinese mod text")
     assert_eq(modinfo_for("zht").name, en.name, "Traditional Chinese falls back to English")
     assert_eq(zh.configuration_options[1].options[1].description, "启用", "Chinese on label")
+    local ru = modinfo_for("ru")
+    assert_eq(ru.name, "Кодекс Умбра для Вортокса", "Russian mod name uses the official Codex name")
+    assert_eq(ru.configuration_options[1].options[1].description, "Включено", "Russian on label")
+    assert_eq(ru.configuration_options[2].label, "Труппа флейты", "Russian troupe label")
+    assert_true(ru.description ~= en.description, "description is in Russian")
     assert_true(zh.description ~= en.description and zh.description ~= pt.description, "description is in Chinese")
     assert_eq(en.name, "Codex Umbra for Wortox", "English mod name")
     assert_eq(pt.name, "Codex Umbra para o Wortox", "Portuguese mod name")
@@ -1085,7 +1100,7 @@ do
         for _, choice in ipairs(language.options) do
             table.insert(values, tostring(choice.data))
         end
-        assert_eq(table.concat(values, ","), "auto,en,pt,zh", "language offers auto, English, Portuguese and Chinese")
+        assert_eq(table.concat(values, ","), "auto,en,pt,zh,ru", "language offers auto, English, Portuguese, Chinese and Russian")
     end
 end
 
