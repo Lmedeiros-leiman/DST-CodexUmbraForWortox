@@ -64,4 +64,17 @@ configuration_options =
         },
         default = true,
     },
+    {
+        name = "language",
+        label = T("Language", "Idioma"),
+        hover = T("Language of Wortox's lines in the world. Auto follows the server's language.",
+            "Idioma das falas do Wortox no mundo. Automático segue o idioma do servidor."),
+        options =
+        {
+            { description = T("Auto", "Automático"), data = "auto" },
+            { description = "English", data = "en" },
+            { description = "Português", data = "pt" },
+        },
+        default = "auto",
+    },
 }

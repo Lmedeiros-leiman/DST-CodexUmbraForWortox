@@ -998,8 +998,8 @@ end
 
 -- Wortox's lines follow the game language, English otherwise.
 do
-    local function lines_for(locale)
-        local chars = load_mod({}, true, locale).GLOBAL.STRINGS.CHARACTERS
+    local function lines_for(locale, forced)
+        local chars = load_mod({ language = forced }, true, locale).GLOBAL.STRINGS.CHARACTERS
         return {
             chars.WORTOX.ACTIONFAIL.CASTAOE.NO_MAX_SANITY,
             chars.WORTOX.DESCRIBE.WAXWELLJOURNAL.GENERIC,
@@ -1018,6 +1018,16 @@ do
         assert_true(type(pt[i]) == "string" and pt[i] ~= en[i], "line " .. i .. " has its own Portuguese text")
         assert_eq(fr[i], en[i], "line " .. i .. " falls back to English for other languages")
         assert_eq(none[i], en[i], "line " .. i .. " is English when the game reports no locale")
+    end
+
+    -- The language option overrides the server's game language.
+    local forced_pt, forced_en = lines_for("en", "pt"), lines_for("pt", "en")
+    local auto_pt, unknown = lines_for("pt", "auto"), lines_for("pt", "klingon")
+    for i = 1, #en do
+        assert_eq(forced_pt[i], pt[i], "line " .. i .. " forced to Portuguese on an English server")
+        assert_eq(forced_en[i], en[i], "line " .. i .. " forced to English on a Portuguese server")
+        assert_eq(auto_pt[i], pt[i], "line " .. i .. " on auto follows the server language")
+        assert_eq(unknown[i], pt[i], "line " .. i .. " ignores an unknown option value")
     end
 end
 
@@ -1039,11 +1049,28 @@ do
         local pt_option = pt.configuration_options[i]
         assert_eq(pt_option.name, option.name, option.name .. " keeps its config key in both languages")
         assert_true(pt_option.hover ~= option.hover, option.name .. " hover is translated")
-        assert_eq(option.options[1].description, "Enabled", option.name .. " English on label")
-        assert_eq(pt_option.options[1].description, "Ativado", option.name .. " Portuguese on label")
+        if type(option.default) == "boolean" then
+            assert_eq(option.options[1].description, "Enabled", option.name .. " English on label")
+            assert_eq(pt_option.options[1].description, "Ativado", option.name .. " Portuguese on label")
+        end
     end
     assert_eq(pt.configuration_options[2].label, "Trupe da Flauta", "Portuguese troupe label")
     assert_eq(en.icon_atlas, "modicon.xml", "modinfo points at the icon atlas")
+    local language
+    for _, option in ipairs(en.configuration_options) do
+        if option.name == "language" then
+            language = option
+        end
+    end
+    assert_true(language ~= nil, "modinfo has a language option")
+    if language ~= nil then
+        assert_eq(language.default, "auto", "language defaults to auto")
+        local values = {}
+        for _, choice in ipairs(language.options) do
+            table.insert(values, tostring(choice.data))
+        end
+        assert_eq(table.concat(values, ","), "auto,en,pt", "language offers auto, English and Portuguese")
+    end
 end
 
 if failures > 0 then

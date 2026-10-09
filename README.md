@@ -38,13 +38,17 @@ A Don't Starve Together mod that teaches Wortox Maxwell's shadow magic.
 
 ### Languages
 
-The mod list text and Wortox's lines are in English and Portuguese (Brazil), following the game language; any other language uses English. Speech is resolved on the server, so everyone hears the host's language.
+The mod list text and Wortox's lines are in English and Portuguese (Brazil); any other language uses English.
+
+- The mod list text follows each player's own game language.
+- Wortox's lines are resolved on the server, so everyone hears the same language. The `Language` option picks it: `Auto` (default) uses the server's language, or force `English` or `Português`.
+- A world hosted from the game menu takes the host's game language each time it starts (`cluster_language` in `cluster.ini`). A standalone dedicated server sets `cluster_language` by hand.
 
 ### Local install
 
 1. Close Don't Starve Together.
 2. Copy `modinfo.lua`, `modmain.lua`, `modicon.tex`, `modicon.xml` and the `wortox_shenanigans_*.lua` files to `mods/wortox_shenanigans` in the game folder. The default Steam path on Linux is `~/.local/share/Steam/steamapps/common/Don't Starve Together/mods/wortox_shenanigans`.
-3. Enable the mod for the server and pick the `Codex Umbra` and `Panflute Troupe` options.
+3. Enable the mod for the server and pick the `Codex Umbra`, `Panflute Troupe` and `Language` options.
 4. Restart the server after changing options or mod files.
 
 ### Notes
@@ -86,13 +90,17 @@ Mod para Don't Starve Together que ensina ao Wortox a magia de sombra do Maxwell
 
 ### Idiomas
 
-O texto da lista de mods e as falas do Wortox estão em inglês e português (Brasil), conforme o idioma do jogo; outros idiomas usam inglês. As falas são resolvidas no servidor, então todos ouvem o idioma de quem hospeda.
+O texto da lista de mods e as falas do Wortox estão em inglês e português (Brasil); outros idiomas usam inglês.
+
+- O texto da lista de mods segue o idioma do jogo de cada jogador.
+- As falas do Wortox são resolvidas no servidor, então todos ouvem o mesmo idioma. A opção `Idioma` escolhe qual: `Automático` (padrão) usa o idioma do servidor, ou force `English` ou `Português`.
+- Um mundo hospedado pelo menu do jogo pega o idioma do jogo de quem hospeda toda vez que inicia (`cluster_language` no `cluster.ini`). Um servidor dedicado avulso define `cluster_language` à mão.
 
 ### Instalação local
 
 1. Feche o Don't Starve Together.
 2. Copie `modinfo.lua`, `modmain.lua`, `modicon.tex`, `modicon.xml` e os arquivos `wortox_shenanigans_*.lua` para `mods/wortox_shenanigans` na instalação do jogo. O caminho Steam padrão no Linux é `~/.local/share/Steam/steamapps/common/Don't Starve Together/mods/wortox_shenanigans`.
-3. Ative o mod para o servidor e escolha as opções `Codex Umbra` e `Trupe da Flauta`.
+3. Ative o mod para o servidor e escolha as opções `Codex Umbra`, `Trupe da Flauta` e `Idioma`.
 4. Reinicie o servidor depois de alterar opções ou arquivos do mod.
 
 ### Notas
