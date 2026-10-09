@@ -230,11 +230,11 @@ end
 -- NEEDSFUEL otherwise fall back to Wilson's "only_used_by_waxwell".
 local wortox_speech = GLOBAL.STRINGS.CHARACTERS.WORTOX
 wortox_speech.ACTIONFAIL.CASTAOE.NO_MAX_SANITY =
-    "Hyuyu, my head is too crowded with shadows already!"
+    "No room, no room! My head's too full of gloom!"
 wortox_speech.DESCRIBE.WAXWELLJOURNAL.GENERIC =
-    "The old magician's tricks, mine to borrow! Hyuyu!"
+    "His shadowy tricks are mine to mix, hyuyu!"
 wortox_speech.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL =
-    "It hungers for nightmares, as do I for souls."
+    "Empty of dread, the book plays dead."
 
 AddPrefabPostInit("wortox", function(inst)
     inst:AddTag("shadowmagic")

@@ -542,11 +542,11 @@ do
     assert_true(loaded.components.skinner.copy_count >= 3, "skin changes reskin shadow minions")
 
     assert_eq(env.GLOBAL.STRINGS.CHARACTERS.WORTOX.ACTIONFAIL.CASTAOE.NO_MAX_SANITY,
-        "Hyuyu, my head is too crowded with shadows already!", "Wortox max sanity string is set")
+        "No room, no room! My head's too full of gloom!", "Wortox max sanity string is set")
     assert_eq(env.GLOBAL.STRINGS.CHARACTERS.WORTOX.DESCRIBE.WAXWELLJOURNAL.GENERIC,
-        "The old magician's tricks, mine to borrow! Hyuyu!", "Wortox Codex description is set")
+        "His shadowy tricks are mine to mix, hyuyu!", "Wortox Codex description is set")
     assert_eq(env.GLOBAL.STRINGS.CHARACTERS.WORTOX.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL,
-        "It hungers for nightmares, as do I for souls.", "Wortox Codex fuel description is set")
+        "Empty of dread, the book plays dead.", "Wortox Codex fuel description is set")
 end
 
 -- The tint netvar is registered for every shadow minion prefab except shadowdancer.
