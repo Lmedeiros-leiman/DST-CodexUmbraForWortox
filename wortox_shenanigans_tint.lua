@@ -9,29 +9,42 @@
 -- the shape is coloured, never the empty space around it.
 local MINION_MULT = { 0, 0, 0, .5 }
 
--- Colours come from Wortox's skin portraits: no allegiance uses his own fur,
--- Lunar the Lunar skin's slate, Shadow the Shadow skin's reds pushed toward
--- maroon. Nice is lighter, Naughty darker. Index 0 on the network means
--- "not Wortox's" and leaves the vanilla look alone.
+-- The lean sets the base: Neutral is crimson, Nice a pinkish red, Naughty a
+-- red close to Maxwell's black. The allegiance tints it: Shadow darkens every
+-- lean (Naughty ends up about 95% black), Lunar turns it into the pale cyan of
+-- a gestalt. Index 0 on the network means "not Wortox's" and leaves the
+-- vanilla look alone.
 local PALETTE =
 {
-    --  no allegiance              lunar                      shadow
-    { 0xB36955 --[[Clay Rose]], 0x6B8DA6 --[[Moonmist]], 0x8C2F3C --[[Rosewood]] }, -- nice
-    { 0xA04636 --[[Imp Brick]], 0x456478 --[[Slate]],    0x6B1F2A --[[Oxblood]] },  -- neutral
-    { 0x7F3428 --[[Rust]],      0x253341 --[[Midnight]], 0x3D1016 --[[Abyss]] },    -- naughty
+    --  no allegiance                lunar                      shadow
+    { 0xFF6F91 --[[Rose]],        0xD6D2F2 --[[Pearl]],     0x8C3D50 --[[Dusk Rose]] }, -- nice
+    { 0xDC143C --[[Crimson]],     0x9ED8EE --[[Gestalt]],   0x6A0A1D --[[Oxblood]] },   -- neutral
+    { 0x4A0C16 --[[Blood Black]], 0x3F7F99 --[[Deep Moon]], 0x120305 --[[Void Red]] },  -- naughty
+}
+-- Per allegiance. The anim shader lights a pixel by max(world light, light
+-- override), so the override keeps the colour readable at night. Lunar glows
+-- through the bloom pass the way gestalts do; Shadow stays dim on purpose.
+local ALLEGIANCE_GLOW =
+{
+    { light = .3 },               -- no allegiance
+    { light = .55, bloom = true }, -- lunar
+    { light = .15 },              -- shadow
 }
 local LEAN_ROW = { nice = 1, neutral = 2, naughty = 3 }
 local ALLEGIANCE_COLUMN = { none = 1, lunar = 2, shadow = 3 }
+local BLOOM_SHADER = "shaders/anim.ksh"
 
 -- Flattened row by row to indices 1..9 so one small network byte carries
--- the colour. Half strength: with alpha .5 the add shows the full colour.
-local TINT_COLOURS = {}
+-- the tint. Half strength: with alpha .5 the add shows the full colour.
+local TINTS = {}
 for _, row in ipairs(PALETTE) do
-    for _, hex in ipairs(row) do
-        table.insert(TINT_COLOURS, {
-            math.floor(hex / 0x10000) % 0x100 / 255 * .5,
-            math.floor(hex / 0x100) % 0x100 / 255 * .5,
-            hex % 0x100 / 255 * .5,
+    for column, hex in ipairs(row) do
+        table.insert(TINTS, {
+            r = math.floor(hex / 0x10000) % 0x100 / 255 * .5,
+            g = math.floor(hex / 0x100) % 0x100 / 255 * .5,
+            b = hex % 0x100 / 255 * .5,
+            light = ALLEGIANCE_GLOW[column].light,
+            bloom = ALLEGIANCE_GLOW[column].bloom,
         })
     end
 end
@@ -70,15 +83,27 @@ local SHADOW_FX_PREFABS =
     "shadow_glob_fx",
 }
 
-local function ApplyMinionTint(inst, colour)
+-- Set every time, so a respec from Lunar to another allegiance drops the bloom.
+local function ApplyGlow(inst, tint)
+    inst.AnimState:SetLightOverride(tint.light)
+    if tint.bloom then
+        inst.AnimState:SetBloomEffectHandle(BLOOM_SHADER)
+    else
+        inst.AnimState:ClearBloomEffectHandle()
+    end
+end
+
+local function ApplyMinionTint(inst, tint)
     inst.AnimState:SetMultColour(MINION_MULT[1], MINION_MULT[2], MINION_MULT[3], MINION_MULT[4])
-    inst.AnimState:SetAddColour(colour[1], colour[2], colour[3], 0)
+    inst.AnimState:SetAddColour(tint.r, tint.g, tint.b, 0)
+    ApplyGlow(inst, tint)
 end
 
 -- The despawn smoke art is near black, so a multiply cannot colour it; the
 -- add does, and the fx keep their vanilla multiply.
-local function ApplyFxTint(inst, colour)
-    inst.AnimState:SetAddColour(colour[1], colour[2], colour[3], 0)
+local function ApplyFxTint(inst, tint)
+    inst.AnimState:SetAddColour(tint.r, tint.g, tint.b, 0)
+    ApplyGlow(inst, tint)
 end
 
 local function GetTint(inst)
@@ -93,9 +118,9 @@ local function SetupTint(inst, apply)
 
     if not GLOBAL.TheWorld.ismastersim then
         local function OnTintDirty(inst_)
-            local colour = TINT_COLOURS[GetTint(inst_)]
-            if colour ~= nil then
-                apply(inst_, colour)
+            local tint = TINTS[GetTint(inst_)]
+            if tint ~= nil then
+                apply(inst_, tint)
             end
         end
         inst:ListenForEvent("wortoxshen_tintdirty", OnTintDirty)
@@ -109,7 +134,7 @@ local function SetTint(inst, index, apply)
         inst._wortoxshen_tint:set(index)
     end
     -- Also applied on the server, which renders for a listen-server host.
-    apply(inst, TINT_COLOURS[index])
+    apply(inst, TINTS[index])
 end
 
 for _, prefab in ipairs(SHADOW_MINION_PREFABS) do

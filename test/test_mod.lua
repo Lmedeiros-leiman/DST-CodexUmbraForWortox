@@ -253,6 +253,16 @@ local function new_anim_state()
         SetSymbolAddColour = function(self, symbol, r, g, b, a)
             table.insert(self.symbol_add_colour_calls, { symbol, r, g, b, a })
         end,
+        SetLightOverride = function(self, light)
+            self.light_override = light
+        end,
+        SetBloomEffectHandle = function(self, shader)
+            self.bloom = shader
+        end,
+        ClearBloomEffectHandle = function(self)
+            self.bloom = nil
+            self.bloom_cleared = true
+        end,
     }
 end
 
@@ -274,7 +284,26 @@ local function tint_add(hex)
     }
 end
 
-local IMP_BRICK = 0xA04636
+local CRIMSON = 0xDC143C
+
+-- Allegiance glow per palette colour: light override and gestalt bloom.
+local GLOW =
+{
+    [0xFF6F91] = { .3 }, [0xDC143C] = { .3 }, [0x4A0C16] = { .3 },
+    [0xD6D2F2] = { .55, true }, [0x9ED8EE] = { .55, true }, [0x3F7F99] = { .55, true },
+    [0x8C3D50] = { .15 }, [0x6A0A1D] = { .15 }, [0x120305] = { .15 },
+}
+
+local function assert_glow(anim, hex, label)
+    local glow = GLOW[hex]
+    assert_eq(anim.light_override, glow[1], label .. " light override")
+    if glow[2] then
+        assert_eq(anim.bloom, "shaders/anim.ksh", label .. " blooms like a gestalt")
+    else
+        assert_eq(anim.bloom, nil, label .. " has no bloom")
+        assert_true(anim.bloom_cleared, label .. " clears any previous bloom")
+    end
+end
 
 local function assert_add(calls, hex, label)
     local add = calls[#calls] or {}
@@ -290,6 +319,7 @@ local function assert_minion_tint(anim, hex, label)
     assert_true(mult[1] == 0 and mult[2] == 0 and mult[3] == 0 and mult[4] == .5,
         label .. " uses Maxwell's black silhouette multiply")
     assert_add(anim.add_colour_calls, hex, label .. " fill")
+    assert_glow(anim, hex, label)
     assert_eq(#anim.symbol_colour_calls + #anim.symbol_add_colour_calls, 0,
         label .. " leaves tools in the same silhouette")
 end
@@ -545,7 +575,7 @@ do
     if worker._wortoxshen_tint ~= nil then
         assert_eq(worker._wortoxshen_tint:value(), 4, "fresh Wortox sends the neutral, no-allegiance index")
     end
-    assert_minion_tint(worker.AnimState, IMP_BRICK, "server shadowworker")
+    assert_minion_tint(worker.AnimState, CRIMSON, "server shadowworker")
 
     local inspectable = worker.components.inspectable
     assert_true(inspectable ~= nil and inspectable.getstatus ~= nil, "Wortox's shadow can be inspected")
@@ -650,7 +680,7 @@ do
     assert_true(pet._wortoxshen_tint ~= nil, "client minion has a tint network variable")
     if pet._wortoxshen_tint ~= nil then
         pet._wortoxshen_tint:set(4)
-        assert_minion_tint(pet.AnimState, IMP_BRICK, "client shadowworker")
+        assert_minion_tint(pet.AnimState, CRIMSON, "client shadowworker")
     end
 end
 
@@ -706,7 +736,8 @@ do
         local label = fx.prefab .. " #" .. i
         assert_eq(fx._wortoxshen_tint ~= nil and fx._wortoxshen_tint:value(), 4,
             label .. " carries the minion's tint index for clients")
-        assert_add(fx.AnimState.add_colour_calls, IMP_BRICK, label .. " add colour")
+        assert_add(fx.AnimState.add_colour_calls, CRIMSON, label .. " add colour")
+        assert_glow(fx.AnimState, CRIMSON, label)
         assert_eq(#fx.AnimState.colour_calls, 0, label .. " keeps its vanilla multiply")
     end
 
@@ -743,9 +774,9 @@ end
 do
     local expected =
     {
-        { nil, nil, 0xA04636 }, { "nice", nil, 0xB36955 }, { "naughty", nil, 0x7F3428 },
-        { nil, "lunar", 0x456478 }, { "nice", "lunar", 0x6B8DA6 }, { "naughty", "lunar", 0x253341 },
-        { nil, "shadow", 0x6B1F2A }, { "nice", "shadow", 0x8C2F3C }, { "naughty", "shadow", 0x3D1016 },
+        { nil, nil, 0xDC143C }, { "nice", nil, 0xFF6F91 }, { "naughty", nil, 0x4A0C16 },
+        { nil, "lunar", 0x9ED8EE }, { "nice", "lunar", 0xD6D2F2 }, { "naughty", "lunar", 0x3F7F99 },
+        { nil, "shadow", 0x6A0A1D }, { "nice", "shadow", 0x8C3D50 }, { "naughty", "shadow", 0x120305 },
     }
     for _, case in ipairs(expected) do
         local lean, allegiance, hex = case[1], case[2], case[3]
@@ -765,24 +796,31 @@ do
     local inst = new_player(env)
     get_postinit(env)(inst)
     local pet = inst.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
-    assert_minion_tint(pet.AnimState, 0xA04636, "before respec")
+    assert_minion_tint(pet.AnimState, 0xDC143C, "before respec")
 
     inst.wortox_inclination = "naughty"
     inst:PushEvent("wortox_inclination_changed")
-    assert_minion_tint(pet.AnimState, 0x7F3428, "after turning naughty")
+    assert_minion_tint(pet.AnimState, 0x4A0C16, "after turning naughty")
 
     inst.components.skilltreeupdater.active.wortox_allegiance_shadow = true
     inst:PushEvent("onactivateskill_server", { skill = "wortox_allegiance_shadow" })
-    assert_minion_tint(pet.AnimState, 0x3D1016, "after joining the shadow")
+    assert_minion_tint(pet.AnimState, 0x120305, "after joining the shadow")
     assert_eq(pet._wortoxshen_tint:value(), 9, "naughty shadow is the last palette cell")
 
     inst.components.skilltreeupdater.active.wortox_allegiance_shadow = nil
     inst:PushEvent("ondeactivateskill_server", { skill = "wortox_allegiance_shadow" })
-    assert_minion_tint(pet.AnimState, 0x7F3428, "after a respec drops the allegiance")
+    assert_minion_tint(pet.AnimState, 0x4A0C16, "after a respec drops the allegiance")
+
+    inst.components.skilltreeupdater.active.wortox_allegiance_lunar = true
+    inst:PushEvent("onactivateskill_server", { skill = "wortox_allegiance_lunar" })
+    assert_minion_tint(pet.AnimState, 0x3F7F99, "after joining the moon")
+    inst.components.skilltreeupdater.active.wortox_allegiance_lunar = nil
+    inst:PushEvent("ondeactivateskill_server", { skill = "wortox_allegiance_lunar" })
+    assert_eq(pet.AnimState.bloom, nil, "leaving the moon drops the gestalt bloom")
 
     inst.wortox_inclination = "nice"
     inst:PushEvent("ms_skilltreeinitialized")
-    assert_minion_tint(pet.AnimState, 0xB36955, "after the skill tree loads")
+    assert_minion_tint(pet.AnimState, 0xFF6F91, "after the skill tree loads")
 
     local critter = inst.components.petleash:SpawnPetAt(0, 0, 0, "critter")
     inst:PushEvent("ms_skilltreeinitialized")
@@ -862,7 +900,7 @@ do
         assert_eq(dancer:HasTag("scarytoprey"), false, label .. " does not scare wildlife")
         assert_eq(dancer.components.skinner.last_player, wortox, label .. " wears Wortox's skin")
         assert_eq(dancer._wortoxshen_tint:value(), 4, label .. " carries Wortox's palette index")
-        assert_minion_tint(dancer.AnimState, IMP_BRICK, label)
+        assert_minion_tint(dancer.AnimState, CRIMSON, label)
         assert_true(dancer.position[1] == 11 and dancer.position[3] == 22, label .. " stands at the walkable offset")
         dancer:PushEvent("newstate", { statename = "spawn" })
         assert_eq(dancer.dance_count, 0, label .. " does not dance while spawning")
@@ -906,7 +944,7 @@ do
     flute.components.instrument.onplayed(flute, wortox)
     assert_eq(#env.dancers, 2, "a spot without walkable ground gets no dancer")
     for i, dancer in ipairs(env.dancers) do
-        assert_minion_tint(dancer.AnimState, 0x253341, "naughty lunar dancer " .. i)
+        assert_minion_tint(dancer.AnimState, 0x3F7F99, "naughty lunar dancer " .. i)
     end
 end
 
