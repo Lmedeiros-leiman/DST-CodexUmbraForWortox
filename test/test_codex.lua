@@ -274,14 +274,8 @@ local function assert_minion_crimson(anim, label)
     local add = anim.add_colour_calls[1] or {}
     assert_true(add[1] == .45 and add[2] == .02 and add[3] == .1 and add[4] == 0,
         label .. " fills the silhouette with crimson")
-    local tool = anim.symbol_colour_calls[1] or {}
-    assert_eq(tool[1], "swap_object", label .. " tints the tool symbol")
-    assert_true(tool[2] == 0 and tool[3] == 0 and tool[4] == 0 and tool[5] == 1,
-        label .. " multiplies the tool to black")
-    local tool_add = anim.symbol_add_colour_calls[1] or {}
-    assert_eq(tool_add[1], "swap_object", label .. " cancels the add on the tool symbol")
-    assert_true(tool_add[2] == -add[1] and tool_add[3] == -add[2] and tool_add[4] == -add[3]
-        and tool_add[5] == 0, label .. " tool add is the negated crimson")
+    assert_eq(#anim.symbol_colour_calls + #anim.symbol_add_colour_calls, 0,
+        label .. " leaves tools in the same crimson silhouette")
 end
 
 local function new_pet(prefab, env)

@@ -13,7 +13,7 @@ do Maxwell.
 - Os lacaios somem quando Wortox morre, vira fantasma, troca de personagem ou viaja entre superficie e cavernas.
 - Os lacaios sao silhuetas carmesim translucidas, como as sombras do Maxwell, e copiam a skin do Wortox (inclusive ao trocar de skin no armario), que aparece no formato da silhueta.
 - Os lacaios do Wortox podem ser examinados: o dono tem uma fala, outro Wortox tem outra, o Maxwell tem uma fala propria e os demais personagens usam uma fala generica. As sombras do Maxwell continuam sem exame, como no jogo base.
-- As ferramentas e a espada dos lacaios ficam pretas, como as sombras do Maxwell.
+- As ferramentas e a espada fazem parte da mesma silhueta carmesim, como nas sombras do Maxwell.
 - A fumaca e a mancha que aparecem quando um lacaio some ficam carmesim. Os lacaios do Maxwell continuam pretos.
 - Wortox tem falas proprias para o Codex.
 
