@@ -51,6 +51,9 @@ local function SpawnTroupe(wortox)
         if offset ~= nil then
             local dancer = GLOBAL.SpawnPrefab("shadowdancer")
             dancer.persists = false
+            -- MakeMinion tags every minion scarytoprey, which sends rabbits
+            -- running and birds flying; a visual troupe should not.
+            dancer:RemoveTag("scarytoprey")
             dancer.Transform:SetPosition(pos.x + offset.x, 0, pos.z + offset.z)
             dancer.components.skinner:CopySkinsFromPlayer(wortox)
             tint.SetTint(dancer, index, tint.ApplyMinionTint)

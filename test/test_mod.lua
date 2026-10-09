@@ -807,6 +807,7 @@ local function new_troupe_env(ismastersim)
             return spawn_fx(prefab)
         end
         local dancer = new_pet(prefab, env)
+        dancer:AddTag("scarytoprey") -- MakeMinion adds it to every minion
         dancer.tasks = {}
         -- Deferred, unlike the harness default, so the dance timer can be checked.
         function dancer:DoTaskInTime(delay, fn, ...)
@@ -858,6 +859,7 @@ do
     for i, dancer in ipairs(env.dancers) do
         local label = "dancer " .. i
         assert_eq(dancer.persists, false, label .. " is never saved")
+        assert_eq(dancer:HasTag("scarytoprey"), false, label .. " does not scare wildlife")
         assert_eq(dancer.components.skinner.last_player, wortox, label .. " wears Wortox's skin")
         assert_eq(dancer._wortoxshen_tint:value(), 4, label .. " carries Wortox's palette index")
         assert_minion_tint(dancer.AnimState, IMP_BRICK, label)
