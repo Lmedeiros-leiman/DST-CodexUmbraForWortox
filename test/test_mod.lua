@@ -289,9 +289,9 @@ local CRIMSON = 0xDC143C
 -- Allegiance glow per palette colour: light override and gestalt bloom.
 local GLOW =
 {
-    [0xFF6F91] = { .3 }, [0xDC143C] = { .3 }, [0x4A0C16] = { .3 },
-    [0xD6D2F2] = { .55, true }, [0x9ED8EE] = { .55, true }, [0x3F7F99] = { .55, true },
-    [0x8C3D50] = { .15 }, [0x6A0A1D] = { .15 }, [0x120305] = { .15 },
+    [0xFF6F91] = { .3 }, [0xDC143C] = { .3 }, [0x8A0A22] = { .3 },
+    [0x7FE8FF] = { .55, true }, [0x2FD0F0] = { .55, true }, [0x1580B0] = { .55, true },
+    [0xA0206A] = { .3 }, [0x7A0A3A] = { .3 }, [0x4E0418] = { .3 },
 }
 
 local function assert_glow(anim, hex, label)
@@ -774,9 +774,9 @@ end
 do
     local expected =
     {
-        { nil, nil, 0xDC143C }, { "nice", nil, 0xFF6F91 }, { "naughty", nil, 0x4A0C16 },
-        { nil, "lunar", 0x9ED8EE }, { "nice", "lunar", 0xD6D2F2 }, { "naughty", "lunar", 0x3F7F99 },
-        { nil, "shadow", 0x6A0A1D }, { "nice", "shadow", 0x8C3D50 }, { "naughty", "shadow", 0x120305 },
+        { nil, nil, 0xDC143C }, { "nice", nil, 0xFF6F91 }, { "naughty", nil, 0x8A0A22 },
+        { nil, "lunar", 0x2FD0F0 }, { "nice", "lunar", 0x7FE8FF }, { "naughty", "lunar", 0x1580B0 },
+        { nil, "shadow", 0x7A0A3A }, { "nice", "shadow", 0xA0206A }, { "naughty", "shadow", 0x4E0418 },
     }
     for _, case in ipairs(expected) do
         local lean, allegiance, hex = case[1], case[2], case[3]
@@ -800,20 +800,20 @@ do
 
     inst.wortox_inclination = "naughty"
     inst:PushEvent("wortox_inclination_changed")
-    assert_minion_tint(pet.AnimState, 0x4A0C16, "after turning naughty")
+    assert_minion_tint(pet.AnimState, 0x8A0A22, "after turning naughty")
 
     inst.components.skilltreeupdater.active.wortox_allegiance_shadow = true
     inst:PushEvent("onactivateskill_server", { skill = "wortox_allegiance_shadow" })
-    assert_minion_tint(pet.AnimState, 0x120305, "after joining the shadow")
+    assert_minion_tint(pet.AnimState, 0x4E0418, "after joining the shadow")
     assert_eq(pet._wortoxshen_tint:value(), 9, "naughty shadow is the last palette cell")
 
     inst.components.skilltreeupdater.active.wortox_allegiance_shadow = nil
     inst:PushEvent("ondeactivateskill_server", { skill = "wortox_allegiance_shadow" })
-    assert_minion_tint(pet.AnimState, 0x4A0C16, "after a respec drops the allegiance")
+    assert_minion_tint(pet.AnimState, 0x8A0A22, "after a respec drops the allegiance")
 
     inst.components.skilltreeupdater.active.wortox_allegiance_lunar = true
     inst:PushEvent("onactivateskill_server", { skill = "wortox_allegiance_lunar" })
-    assert_minion_tint(pet.AnimState, 0x3F7F99, "after joining the moon")
+    assert_minion_tint(pet.AnimState, 0x1580B0, "after joining the moon")
     inst.components.skilltreeupdater.active.wortox_allegiance_lunar = nil
     inst:PushEvent("ondeactivateskill_server", { skill = "wortox_allegiance_lunar" })
     assert_eq(pet.AnimState.bloom, nil, "leaving the moon drops the gestalt bloom")
@@ -944,7 +944,7 @@ do
     flute.components.instrument.onplayed(flute, wortox)
     assert_eq(#env.dancers, 2, "a spot without walkable ground gets no dancer")
     for i, dancer in ipairs(env.dancers) do
-        assert_minion_tint(dancer.AnimState, 0x3F7F99, "naughty lunar dancer " .. i)
+        assert_minion_tint(dancer.AnimState, 0x1580B0, "naughty lunar dancer " .. i)
     end
 end
 

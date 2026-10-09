@@ -12,14 +12,14 @@ do Maxwell.
 - Cada lacaio reduz a sanidade maxima do Wortox como no Maxwell (15% por trabalhador, limite de 90%).
 - Os lacaios somem quando Wortox morre, vira fantasma, troca de personagem ou viaja entre superficie e cavernas.
 - Os lacaios sao silhuetas translucidas, como as sombras do Maxwell, e copiam a skin do Wortox (inclusive ao trocar de skin no armario), que aparece no formato da silhueta.
-- A cor da silhueta depende da arvore de habilidades do Wortox. A inclinacao define a base: Neutro e carmesim, Bonzinho e rosado, Travesso e um vermelho quase preto, perto do Maxwell. A alianca tinge a base: Sombra escurece tudo (Travesso fica quase todo preto) e Lunar deixa a sombra clara e ciano, com brilho, parecida com um gestalt. Ao mudar de habilidade, as sombras que ja estao fora mudam de cor na hora.
-- As sombras guardam um pouco de luz propria para continuar visiveis a noite: mais na Lunar, menos na Sombra.
+- A cor da silhueta depende da arvore de habilidades do Wortox. A inclinacao define a base: Neutro e carmesim, Bonzinho e rosado, Travesso e um vermelho sangue escuro, puxando para o preto do Maxwell. A alianca tinge a base: Sombra escurece tudo puxando para vinho e violeta (Travesso fica a cor mais escura) e Lunar deixa a sombra ciano, com brilho, parecida com um gestalt. Ao mudar de habilidade, as sombras que ja estao fora mudam de cor na hora.
+- As sombras guardam um pouco de luz propria para continuar visiveis a noite, mais ainda na Lunar.
 
   | Inclinacao / Alianca | Nenhuma | Lunar | Sombra |
   |---|---|---|---|
-  | Bonzinho | Rose `#FF6F91` | Pearl `#D6D2F2` | Dusk Rose `#8C3D50` |
-  | Neutro | Crimson `#DC143C` (padrao) | Gestalt `#9ED8EE` | Oxblood `#6A0A1D` |
-  | Travesso | Blood Black `#4A0C16` | Deep Moon `#3F7F99` | Void Red `#120305` |
+  | Bonzinho | Rose `#FF6F91` | Moonbeam `#7FE8FF` | Dusk Rose `#A0206A` |
+  | Neutro | Crimson `#DC143C` (padrao) | Gestalt `#2FD0F0` | Wine `#7A0A3A` |
+  | Travesso | Blood `#8A0A22` | Deep Moon `#1580B0` | Void Red `#4E0418` |
 - Os lacaios do Wortox podem ser examinados: o dono tem uma fala, outro Wortox tem outra, o Maxwell tem uma fala propria e os demais personagens usam uma fala generica. As sombras do Maxwell continuam sem exame, como no jogo base.
 - As ferramentas e a espada fazem parte da mesma silhueta, como nas sombras do Maxwell.
 - A fumaca e a mancha que aparecem quando um lacaio some ficam da mesma cor do lacaio. Os lacaios do Maxwell continuam pretos.
