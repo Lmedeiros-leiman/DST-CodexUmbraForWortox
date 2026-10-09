@@ -1011,8 +1011,8 @@ do
         }
     end
     local en, pt, fr, none = lines_for("en"), lines_for("pt"), lines_for("fr"), lines_for(nil)
-    assert_eq(pt[1], "Não cabe mais nada! Que mente assombrada!", "Portuguese max sanity line")
-    assert_eq(pt[2], "Magia das sombras, que delícia! Agora é minha essa malícia, huehue!", "Portuguese Codex line")
+    assert_eq(pt[1], "Não cabe mais nada! Minha mente já está assombrada, huehue!", "Portuguese max sanity line")
+    assert_eq(pt[2], "Os truques do mágico agora são meus, huehue!", "Portuguese Codex line")
     assert_eq(pt[4], "Minha sombra, meu par, parceira pra aprontar!", "Portuguese own-shadow line")
     for i = 1, #en do
         assert_true(type(pt[i]) == "string" and pt[i] ~= en[i], "line " .. i .. " has its own Portuguese text")
@@ -1034,7 +1034,7 @@ do
 
     -- Russian.
     local ru = lines_for("ru")
-    assert_eq(ru[2], "Его теневые штучки теперь в моих ручках, хо-хо!", "Russian Codex line in Wortox's official laugh")
+    assert_eq(ru[2], "Теперь его теневые фокусы — мои, хо-хо!", "Russian Codex line in Wortox's official laugh")
     assert_eq(ru[4], "Моя тень, мой двойник, мой напарник-озорник!", "Russian own-shadow line")
     for i = 1, #en do
         assert_true(type(ru[i]) == "string" and ru[i] ~= en[i] and ru[i] ~= pt[i] and ru[i] ~= zh[i],
