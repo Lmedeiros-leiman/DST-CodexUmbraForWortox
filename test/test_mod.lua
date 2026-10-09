@@ -876,12 +876,24 @@ local function new_flute(env)
     return flute
 end
 
-local function new_musician(env, prefab)
+local function new_musician(env, prefab, carried)
     local inst = new_player(env)
     inst.prefab = prefab
     function inst:GetPosition()
         return { x = 10, y = 0, z = 20 }
     end
+    -- Stands in for Inventory:FindItem (slots, cursor and open backpack).
+    inst.carried = carried or { { prefab = "waxwelljournal" } }
+    inst.components.inventory =
+    {
+        FindItem = function(_, fn)
+            for _, item in ipairs(inst.carried) do
+                if fn(item) then
+                    return item
+                end
+            end
+        end,
+    }
     return inst
 end
 
@@ -931,6 +943,26 @@ do
     flute.components.instrument.onplayed(flute, wilson)
     assert_eq(#env.dancers, 0, "other characters get no troupe")
     assert_eq(flute.played_with[#flute.played_with], wilson, "other characters still play the flute normally")
+end
+
+-- The troupe needs the Codex Umbra on Wortox; any other item does not count.
+do
+    local env = new_troupe_env(true)
+    local flute = new_flute(env)
+    local bookless = new_musician(env, "wortox", { { prefab = "book_sleep" }, { prefab = "panflute" } })
+    flute.components.instrument.onplayed(flute, bookless)
+    assert_eq(#env.dancers, 0, "Wortox without the Codex gets no troupe")
+    assert_eq(flute.played_with[1], bookless, "the flute still plays normally without the Codex")
+
+    local reader = new_musician(env, "wortox", { { prefab = "panflute" }, { prefab = "waxwelljournal" } })
+    flute.components.instrument.onplayed(flute, reader)
+    assert_eq(#env.dancers, 3, "the Codex anywhere Wortox carries it brings the troupe")
+
+    env.dancers = {}
+    local inventoryless = new_musician(env, "wortox")
+    inventoryless.components.inventory = nil
+    flute.components.instrument.onplayed(flute, inventoryless)
+    assert_eq(#env.dancers, 0, "a musician without an inventory gets no troupe")
 end
 
 -- The troupe follows Wortox's palette and skips spots with no walkable ground.

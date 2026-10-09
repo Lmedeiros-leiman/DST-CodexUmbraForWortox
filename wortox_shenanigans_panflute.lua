@@ -1,6 +1,7 @@
--- Panflute troupe: when Wortox plays a panflute, a few shadow dancers in his
--- colours appear around him, dance for a while and vanish. Purely visual:
--- they are not pets, cost no sanity and are never saved.
+-- Panflute troupe: when Wortox plays a panflute while carrying the Codex
+-- Umbra, a few shadow dancers in his colours appear around him, dance for a
+-- while and vanish. Purely visual: they are not pets, cost no sanity and are
+-- never saved.
 local tint = wortox_shenanigans_tint
 
 local TROUPE_SIZE = 3
@@ -66,6 +67,17 @@ local function SpawnTroupe(wortox)
     wortox._wortoxshen_troupe = troupe
 end
 
+local function IsCodex(item)
+    return item.prefab == "waxwelljournal"
+end
+
+-- FindItem covers the inventory slots, the item on the cursor and an open
+-- backpack, so the book counts anywhere Wortox is carrying it.
+local function CarriesCodex(musician)
+    local inventory = musician.components.inventory
+    return inventory ~= nil and inventory:FindItem(IsCodex) ~= nil
+end
+
 AddPrefabPostInit("panflute", function(inst)
     if not GLOBAL.TheWorld.ismastersim then
         return
@@ -83,7 +95,7 @@ AddPrefabPostInit("panflute", function(inst)
         if onplayed ~= nil then
             onplayed(flute, musician, ...)
         end
-        if musician ~= nil and musician.prefab == "wortox" and musician:IsValid() then
+        if musician ~= nil and musician.prefab == "wortox" and musician:IsValid() and CarriesCodex(musician) then
             SpawnTroupe(musician)
         end
     end)

@@ -27,10 +27,10 @@ do Maxwell.
 
 ### Trupe da Flauta
 
-- Quando o Wortox toca a flauta de pa, tres sombras dancarinas aparecem ao redor dele, com a skin e a cor da arvore de habilidades dele.
+- Quando o Wortox toca a flauta de pa carregando o Codex Umbra (no inventario, no cursor ou na mochila), tres sombras dancarinas aparecem ao redor dele, com a skin e a cor da arvore de habilidades dele.
 - Elas dancam por cerca de 10 segundos e somem numa fumaca da mesma cor. Tocar de novo troca a trupe em vez de acumular dancarinos.
 - Sao so visuais: nao contam como lacaios, nao custam sanidade, nao sao salvas e nao dormem com a musica.
-- Funciona mesmo com o Codex Umbra desativado.
+- Tem opcao propria. Com a opcao Codex Umbra desativada o Wortox nao cria o livro, mas um Codex do Maxwell carregado por ele ainda chama a trupe.
 
 ## Instalacao local
 
