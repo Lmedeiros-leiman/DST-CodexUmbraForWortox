@@ -146,8 +146,9 @@ end
 
 -- Lines per language (LOC code), English otherwise. Speech is resolved
 -- on the server and broadcast as text, so the host's language is what every
--- player hears. The Portuguese follows the official translation, where
--- Wortox's "hyuyu" is "huehue".
+-- player hears. Each translation follows the official one for Wortox's laugh
+-- ("huehue" in Portuguese, "哼哼" in Chinese) and DST's names for the Codex
+-- (暗影秘典) and its shadows.
 local LINES =
 {
     en =
@@ -170,7 +171,19 @@ local LINES =
         shadow_maxwell = "Aquele diabrete andou mexendo nas minhas anotações.",
         shadow_generic = "Essa sombra tem um tom diabólico.",
     },
+    zh =
+    {
+        no_max_sanity = "不行不行！我的脑袋里塞满了阴影！",
+        codex = "他的暗影戏法，现在由我来耍，哼哼！",
+        codex_needsfuel = "没了恐惧当饭吃，这本书就装死。",
+        shadow_mine = "我的影子我的伴，一起捣蛋一起干！",
+        shadow_other = "又一个小恶魔的影，咱们闹得真起劲！",
+        shadow_maxwell = "那个小恶魔一直在翻我的笔记。",
+        shadow_generic = "这个影子透着一股魔鬼般的颜色。",
+    },
 }
+-- The WeGame (Rail) release reports Simplified Chinese as "zhr".
+local LANGUAGE_ALIASES = { zhr = "zh" }
 -- The "language" option can force one; "auto" (or no option) uses the
 -- server's game language.
 local function GetLanguage()
@@ -178,7 +191,8 @@ local function GetLanguage()
     if forced ~= nil and LINES[forced] ~= nil then
         return forced
     end
-    return GLOBAL.LOC ~= nil and GLOBAL.LOC.GetLocaleCode() or "en"
+    local code = GLOBAL.LOC ~= nil and GLOBAL.LOC.GetLocaleCode() or "en"
+    return LANGUAGE_ALIASES[code] or code
 end
 local lines = LINES[GetLanguage()] or LINES.en
 

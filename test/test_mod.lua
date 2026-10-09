@@ -1021,6 +1021,17 @@ do
     end
 
     -- The language option overrides the server's game language.
+    -- Simplified Chinese, on Steam ("zh") and on WeGame ("zhr").
+    local zh, zhr, zht = lines_for("zh"), lines_for("zhr"), lines_for("zht")
+    assert_eq(zh[1], "不行不行！我的脑袋里塞满了阴影！", "Chinese max sanity line")
+    assert_eq(zh[2], "他的暗影戏法，现在由我来耍，哼哼！", "Chinese Codex line in Wortox's official laugh")
+    for i = 1, #en do
+        assert_true(type(zh[i]) == "string" and zh[i] ~= en[i] and zh[i] ~= pt[i], "line " .. i .. " has its own Chinese text")
+        assert_eq(zhr[i], zh[i], "line " .. i .. " uses Chinese on the WeGame release")
+        assert_eq(zht[i], en[i], "line " .. i .. " stays English for Traditional Chinese")
+        assert_eq(lines_for("en", "zh")[i], zh[i], "line " .. i .. " forced to Chinese")
+    end
+
     local forced_pt, forced_en = lines_for("en", "pt"), lines_for("pt", "en")
     local auto_pt, unknown = lines_for("pt", "auto"), lines_for("pt", "klingon")
     for i = 1, #en do
@@ -1040,7 +1051,12 @@ do
         chunk()
         return env
     end
-    local en, pt = modinfo_for("en"), modinfo_for("pt")
+    local en, pt, zh = modinfo_for("en"), modinfo_for("pt"), modinfo_for("zh")
+    assert_eq(zh.name, "沃拓克斯的暗影秘典", "Chinese mod name uses the official Codex name")
+    assert_eq(modinfo_for("zhr").name, zh.name, "WeGame Chinese gets the Chinese mod text")
+    assert_eq(modinfo_for("zht").name, en.name, "Traditional Chinese falls back to English")
+    assert_eq(zh.configuration_options[1].options[1].description, "启用", "Chinese on label")
+    assert_true(zh.description ~= en.description and zh.description ~= pt.description, "description is in Chinese")
     assert_eq(en.name, "Codex Umbra for Wortox", "English mod name")
     assert_eq(pt.name, "Codex Umbra para o Wortox", "Portuguese mod name")
     assert_eq(modinfo_for(nil).name, en.name, "no locale falls back to English")
@@ -1069,7 +1085,7 @@ do
         for _, choice in ipairs(language.options) do
             table.insert(values, tostring(choice.data))
         end
-        assert_eq(table.concat(values, ","), "auto,en,pt", "language offers auto, English and Portuguese")
+        assert_eq(table.concat(values, ","), "auto,en,pt,zh", "language offers auto, English, Portuguese and Chinese")
     end
 end
 
