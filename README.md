@@ -24,11 +24,18 @@ do Maxwell.
 - A fumaca e a mancha que aparecem quando um lacaio some ficam da mesma cor do lacaio. Os lacaios do Maxwell continuam pretos.
 - Wortox tem falas proprias para o Codex.
 
+### Trupe da Flauta
+
+- Quando o Wortox toca a flauta de pa, tres sombras dancarinas aparecem ao redor dele, com a skin e a cor da arvore de habilidades dele.
+- Elas dancam por cerca de 10 segundos e somem numa fumaca da mesma cor. Tocar de novo troca a trupe em vez de acumular dancarinos.
+- Sao so visuais: nao contam como lacaios, nao custam sanidade, nao sao salvas e nao dormem com a musica.
+- Funciona mesmo com o Codex Umbra desativado.
+
 ## Instalacao local
 
 1. Feche Don't Starve Together.
-2. Copie `modinfo.lua`, `modmain.lua` e `wortox_shenanigans_codex.lua` para `mods/wortox_shenanigans` na instalacao do jogo. O caminho Steam padrao no Linux e `~/.local/share/Steam/steamapps/common/Don't Starve Together/mods/wortox_shenanigans`.
-3. Ative o mod para o servidor e deixe a opcao `Codex Umbra` ativada.
+2. Copie `modinfo.lua`, `modmain.lua` e os arquivos `wortox_shenanigans_*.lua` para `mods/wortox_shenanigans` na instalacao do jogo. O caminho Steam padrao no Linux e `~/.local/share/Steam/steamapps/common/Don't Starve Together/mods/wortox_shenanigans`.
+3. Ative o mod para o servidor e escolha as opcoes `Codex Umbra` e `Trupe da Flauta`.
 4. Reinicie o servidor depois de alterar configuracoes ou arquivos do mod.
 
 ## Notas
@@ -47,6 +54,6 @@ chapeu normal.
 Requer Lua 5.1.
 
 ```bash
-lua5.1 test/test_codex.lua
-luac5.1 -p modinfo.lua modmain.lua wortox_shenanigans_codex.lua test/test_codex.lua
+lua5.1 test/test_mod.lua
+luac5.1 -p modinfo.lua modmain.lua wortox_shenanigans_tint.lua wortox_shenanigans_codex.lua wortox_shenanigans_panflute.lua test/test_mod.lua
 ```

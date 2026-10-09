@@ -1,7 +1,7 @@
--- Lua 5.1 harness for the Wortox Codex Umbra feature.
--- Run from the mod root: lua5.1 test/test_codex.lua
+-- Lua 5.1 harness for the Wortox Shenanigans features.
+-- Run from the mod root: lua5.1 test/test_mod.lua
 
-local mod_root = arg[0]:match("^(.*)/test/test_codex%.lua$")
+local mod_root = arg[0]:match("^(.*)/test/test_mod%.lua$")
 if mod_root == nil or mod_root == "" then
     mod_root = "."
 end
@@ -492,11 +492,21 @@ local function get_prefab_postinit(env, prefab)
     end
 end
 
--- The configuration switch must prevent the feature module from loading.
+-- The configuration switches decide which modules load.
 do
-    local env = load_mod({ codex_umbra = false }, true)
-    assert_eq(#env.imports, 0, "disabled Codex Umbra does not import the feature")
-    assert_eq(#env.postinits, 0, "disabled Codex Umbra does not register a post init")
+    local env = load_mod({ codex_umbra = false, panflute_troupe = false }, true)
+    assert_eq(#env.imports, 0, "all features off imports nothing")
+    assert_eq(#env.postinits, 0, "all features off registers no post init")
+
+    env = load_mod({ codex_umbra = false }, true)
+    assert_eq(table.concat(env.imports, ","), "wortox_shenanigans_tint.lua,wortox_shenanigans_panflute.lua",
+        "troupe alone loads the shared tint and the panflute module")
+    assert_eq(get_postinit(env), nil, "troupe alone leaves Wortox's prefab alone")
+
+    env = load_mod({ panflute_troupe = false }, true)
+    assert_eq(table.concat(env.imports, ","), "wortox_shenanigans_tint.lua,wortox_shenanigans_codex.lua",
+        "Codex alone loads the shared tint and the Codex module")
+    assert_eq(get_prefab_postinit(env, "panflute"), nil, "Codex alone leaves the panflute alone")
 end
 
 -- The tag is available to clients, while all server-only behavior stays out.
@@ -603,7 +613,7 @@ do
         "Empty of dread, the book plays dead.", "Wortox Codex fuel description is set")
 end
 
--- The tint netvar is registered for every shadow minion prefab except shadowdancer.
+-- The tint netvar is registered for every minion prefab, dancers included.
 do
     local env = load_mod({ codex_umbra = true }, true)
     local expected =
@@ -614,13 +624,13 @@ do
         shadowlumber = true,
         shadowminer = true,
         shadowdigger = true,
+        shadowdancer = true,
     }
     local registered = {}
     for _, postinit in ipairs(env.postinits) do
         if expected[postinit.prefab] then
             registered[postinit.prefab] = true
         end
-        assert_eq(postinit.prefab == "shadowdancer", false, "shadowdancer has no tint post init")
     end
     for prefab in pairs(expected) do
         assert_true(registered[prefab], prefab .. " has a tint post init")
@@ -777,6 +787,135 @@ do
     local critter = inst.components.petleash:SpawnPetAt(0, 0, 0, "critter")
     inst:PushEvent("ms_skilltreeinitialized")
     assert_eq(#critter.AnimState.add_colour_calls, 0, "retinting skips non-shadow pets")
+end
+
+-- Panflute troupe: Wortox playing a flute brings three tinted shadow dancers.
+local function new_troupe_env(ismastersim)
+    local env = load_mod({}, ismastersim)
+    env.dancers = {}
+    env.offsets = 0
+    env.GLOBAL.FindWalkableOffset = function()
+        env.offsets = env.offsets + 1
+        if env.no_room_for ~= nil and env.offsets == env.no_room_for then
+            return nil
+        end
+        return { x = 1, y = 0, z = 2 }
+    end
+    local spawn_fx = env.GLOBAL.SpawnPrefab
+    env.GLOBAL.SpawnPrefab = function(prefab)
+        if prefab ~= "shadowdancer" then
+            return spawn_fx(prefab)
+        end
+        local dancer = new_pet(prefab, env)
+        dancer.tasks = {}
+        -- Deferred, unlike the harness default, so the dance timer can be checked.
+        function dancer:DoTaskInTime(delay, fn, ...)
+            table.insert(self.tasks, { delay = delay, fn = fn, args = { ... } })
+            return { Cancel = function() end }
+        end
+        dancer.Transform.SetPosition = function(_, x, y, z)
+            dancer.position = { x, y, z }
+        end
+        dancer.dance_count = 0
+        dancer:ListenForEvent("dance", function(d) d.dance_count = d.dance_count + 1 end)
+        env.initialize_prefab(prefab, dancer)
+        table.insert(env.dancers, dancer)
+        return dancer
+    end
+    return env
+end
+
+local function new_flute(env)
+    local flute = { components = {}, played_with = {} }
+    flute.components.instrument =
+    {
+        onplayed = function(inst, musician) table.insert(inst.played_with, musician) end,
+        SetOnPlayedFn = function(self, fn) self.onplayed = fn end,
+    }
+    flute.vanilla_onplayed = flute.components.instrument.onplayed
+    env.initialize_prefab("panflute", flute)
+    return flute
+end
+
+local function new_musician(env, prefab)
+    local inst = new_player(env)
+    inst.prefab = prefab
+    function inst:GetPosition()
+        return { x = 10, y = 0, z = 20 }
+    end
+    return inst
+end
+
+do
+    local env = new_troupe_env(true)
+    local flute = new_flute(env)
+    local wortox = new_musician(env, "wortox")
+    flute.components.instrument.onplayed(flute, wortox)
+
+    assert_true(flute.components.instrument.onplayed ~= flute.vanilla_onplayed, "server panflute callback is wrapped")
+    assert_eq(flute.played_with[1], wortox, "the vanilla panflute callback still runs")
+    assert_eq(#env.dancers, 3, "Wortox's tune brings three dancers")
+    for i, dancer in ipairs(env.dancers) do
+        local label = "dancer " .. i
+        assert_eq(dancer.persists, false, label .. " is never saved")
+        assert_eq(dancer.components.skinner.last_player, wortox, label .. " wears Wortox's skin")
+        assert_eq(dancer._wortoxshen_tint:value(), 4, label .. " carries Wortox's palette index")
+        assert_minion_tint(dancer.AnimState, IMP_BRICK, label)
+        assert_true(dancer.position[1] == 11 and dancer.position[3] == 22, label .. " stands at the walkable offset")
+        dancer:PushEvent("newstate", { statename = "spawn" })
+        assert_eq(dancer.dance_count, 0, label .. " does not dance while spawning")
+        dancer:PushEvent("newstate", { statename = "idle" })
+        assert_eq(dancer.dance_count, 1, label .. " starts dancing once idle")
+        local exit = dancer.tasks[1]
+        assert_true(exit ~= nil and exit.delay >= 10 and exit.delay <= 10.5, label .. " leaves after about ten seconds")
+    end
+    assert_eq(env.dancers[1].sg.states.quickdespawn, nil, "dancers stay until their timer")
+
+    local first = env.dancers
+    env.dancers = {}
+    flute.components.instrument.onplayed(flute, wortox)
+    assert_eq(#env.dancers, 3, "playing again brings a new troupe")
+    for i, dancer in ipairs(first) do
+        assert_eq(dancer.sg.states.quickdespawn, 1, "previous dancer " .. i .. " leaves when replaced")
+    end
+
+    local timed = env.dancers[1]
+    timed.tasks[1].fn(timed)
+    assert_eq(timed.sg.states.quickdespawn, 1, "the dance timer sends the dancer away")
+    timed.removed = true
+    timed.tasks[1].fn(timed)
+    assert_eq(timed.sg.states.quickdespawn, 1, "a dancer already gone is left alone")
+
+    env.dancers = {}
+    local wilson = new_musician(env, "wilson")
+    flute.components.instrument.onplayed(flute, wilson)
+    assert_eq(#env.dancers, 0, "other characters get no troupe")
+    assert_eq(flute.played_with[#flute.played_with], wilson, "other characters still play the flute normally")
+end
+
+-- The troupe follows Wortox's palette and skips spots with no walkable ground.
+do
+    local env = new_troupe_env(true)
+    env.no_room_for = 2
+    local flute = new_flute(env)
+    local wortox = new_musician(env, "wortox")
+    wortox.wortox_inclination = "naughty"
+    wortox.components.skilltreeupdater.active.wortox_allegiance_lunar = true
+    flute.components.instrument.onplayed(flute, wortox)
+    assert_eq(#env.dancers, 2, "a spot without walkable ground gets no dancer")
+    for i, dancer in ipairs(env.dancers) do
+        assert_minion_tint(dancer.AnimState, 0x253341, "naughty lunar dancer " .. i)
+    end
+end
+
+-- Clients never touch the flute; the server owns the troupe.
+do
+    local env = new_troupe_env(false)
+    local flute = new_flute(env)
+    assert_eq(flute.components.instrument.onplayed, flute.vanilla_onplayed, "client panflute keeps its callback")
+    local wortox = new_musician(env, "wortox")
+    flute.components.instrument.onplayed(flute, wortox)
+    assert_eq(#env.dancers, 0, "clients spawn no dancers")
 end
 
 if failures > 0 then
