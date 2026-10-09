@@ -165,9 +165,9 @@ local LINES =
     {
         no_max_sanity = "Não cabe mais nada! Que mente assombrada!",
         codex = "Magia das sombras, que delícia! Agora é minha essa malícia, huehue!",
-        codex_needsfuel = "Sem um pesadelinho, o livro se finge de mortinho!",
+        codex_needsfuel = "Sem medo pra comer, o livro finge morrer.",
         shadow_mine = "Minha sombra, meu par, parceira pra aprontar!",
-        shadow_other = "Outro diabrete e sua sombra! Que travessura nessa penumbra!",
+        shadow_other = "Sombra de outro diabrete! Que travessura promete!",
         shadow_maxwell = "Aquele diabrete andou mexendo nas minhas anotações.",
         shadow_generic = "Essa sombra tem um tom diabólico.",
     },
@@ -175,10 +175,10 @@ local LINES =
     {
         no_max_sanity = "脑中没空位，暗影挤成堆！",
         codex = "他的暗影戏法，如今归我耍，哼哼！",
-        codex_needsfuel = "没了恐惧当饭吃，这本书就装死。",
+        codex_needsfuel = "燃料用完，装死偷懒！",
         shadow_mine = "我的影子我的伴，一起捣蛋一起玩！",
-        shadow_other = "又一个小恶魔的影，咱们闹得真起劲！",
-        shadow_maxwell = "那个小恶魔翻过我的笔记。",
+        shadow_other = "别的恶魔唤暗影，捣蛋搭档真机灵！",
+        shadow_maxwell = "那个恶魔擅自翻阅了我的笔记。",
         shadow_generic = "这影子，连颜色都透着邪气。",
     },
     ru =
