@@ -37,6 +37,7 @@ local function load_mod(config, ismastersim)
         MODROOT = mod_root .. "/",
         config = config,
         postinits = {},
+        sg_postinits = {},
         imports = {},
         spawn_fx_calls = 0,
         entities_by_guid = {},
@@ -118,6 +119,10 @@ local function load_mod(config, ismastersim)
 
     env.AddPrefabPostInit = function(prefab, fn)
         table.insert(env.postinits, { prefab = prefab, fn = fn })
+    end
+
+    env.AddStategraphPostInit = function(name, fn)
+        table.insert(env.sg_postinits, { name = name, fn = fn })
     end
 
     env.initialize_prefab = function(prefab, inst)
@@ -227,6 +232,47 @@ local function new_health()
     return health
 end
 
+local function new_anim_state()
+    return
+    {
+        colour_calls = {},
+        symbol_colour_calls = {},
+        add_colour_calls = {},
+        SetMultColour = function(self, r, g, b, a)
+            table.insert(self.colour_calls, { r, g, b, a })
+        end,
+        SetSymbolMultColour = function(self, symbol, r, g, b, a)
+            table.insert(self.symbol_colour_calls, { symbol, r, g, b, a })
+        end,
+        SetAddColour = function(self, r, g, b, a)
+            table.insert(self.add_colour_calls, { r, g, b, a })
+        end,
+    }
+end
+
+-- Mirrors SpawnPrefab: post inits run synchronously while the fx is created.
+local function spawn_fx(prefab, env)
+    local fx = { prefab = prefab, AnimState = new_anim_state() }
+    add_event_api(fx)
+    env.register_entity(fx)
+    env.initialize_prefab(prefab, fx)
+    return fx
+end
+
+local function assert_minion_crimson(anim, label)
+    assert_eq(#anim.colour_calls, 1, label .. " applies the crimson multiply once")
+    local mult = anim.colour_calls[1] or {}
+    assert_near(mult[1], .6, label .. " crimson red multiplier")
+    assert_near(mult[2], .05, label .. " crimson green multiplier")
+    assert_near(mult[3], .12, label .. " crimson blue multiplier")
+    assert_near(mult[4], .5, label .. " keeps Maxwell's shadow alpha")
+    local tool = anim.symbol_colour_calls[1] or {}
+    assert_eq(tool[1], "swap_object", label .. " tints the tool symbol")
+    assert_true(tool[2] == 0 and tool[3] == 0 and tool[4] == 0 and tool[5] == 1,
+        label .. " makes the tool pure black")
+    assert_eq(#anim.add_colour_calls, 0, label .. " uses no add colour")
+end
+
 local function new_pet(prefab, env)
     local pet =
     {
@@ -265,13 +311,7 @@ local function new_pet(prefab, env)
                 return 1, 2, 3
             end,
         },
-        AnimState =
-        {
-            colour_calls = {},
-            SetMultColour = function(self, r, g, b, a)
-                table.insert(self.colour_calls, { r, g, b, a })
-            end,
-        },
+        AnimState = new_anim_state(),
     }
     add_event_api(pet)
     if env ~= nil then
@@ -464,13 +504,7 @@ do
     if worker._wortoxshen_crimson ~= nil then
         assert_eq(worker._wortoxshen_crimson:value(), true, "shadowworker network tint is enabled")
     end
-    assert_eq(#worker.AnimState.colour_calls, 1, "Wortox applies the crimson tint on the server")
-    if worker.AnimState.colour_calls[1] ~= nil then
-        assert_near(worker.AnimState.colour_calls[1][1], .7, "crimson tint red multiplier")
-        assert_near(worker.AnimState.colour_calls[1][2], .08, "crimson tint green multiplier")
-        assert_near(worker.AnimState.colour_calls[1][3], .2, "crimson tint blue multiplier")
-        assert_near(worker.AnimState.colour_calls[1][4], .5, "crimson tint keeps shadow alpha")
-    end
+    assert_minion_crimson(worker.AnimState, "server shadowworker")
     worker:PushEvent("onremove")
     assert_eq(inst.components.sanity.penalties[worker], nil, "removed shadowworker loses its sanity penalty")
 
@@ -552,11 +586,7 @@ do
     assert_true(pet._wortoxshen_crimson ~= nil, "client minion has a crimson network variable")
     if pet._wortoxshen_crimson ~= nil then
         pet._wortoxshen_crimson:set(true)
-        assert_eq(#pet.AnimState.colour_calls, 1, "client applies tint when the netvar changes")
-        assert_near(pet.AnimState.colour_calls[1][1], .7, "client crimson tint red multiplier")
-        assert_near(pet.AnimState.colour_calls[1][2], .08, "client crimson tint green multiplier")
-        assert_near(pet.AnimState.colour_calls[1][3], .2, "client crimson tint blue multiplier")
-        assert_near(pet.AnimState.colour_calls[1][4], .5, "client crimson tint shadow alpha")
+        assert_minion_crimson(pet.AnimState, "client shadowworker")
     end
 end
 
@@ -570,10 +600,79 @@ do
         postinit(pet)
     end
     assert_eq(#pet.AnimState.colour_calls, 0, "minion post init alone does not tint it")
+    assert_eq(#pet.AnimState.symbol_colour_calls, 0, "minion post init alone keeps its tool colour")
     assert_true(pet._wortoxshen_crimson ~= nil, "minion post init creates its crimson network variable")
     if pet._wortoxshen_crimson ~= nil then
         assert_eq(pet._wortoxshen_crimson:value(), false, "minion post init leaves its netvar false")
     end
+end
+
+-- Despawn fx spawned by a crimson minion's stategraph turn crimson too.
+do
+    local env = load_mod({ codex_umbra = true }, true)
+    assert_eq(#env.sg_postinits, 1, "one stategraph post init is registered")
+    local sg_postinit = env.sg_postinits[1] or {}
+    assert_eq(sg_postinit.name, "shadowmaxwell", "post init targets the shadowmaxwell stategraph")
+
+    -- Stand-ins for SGshadowwaxwell's handlers: both call DoDespawnFX.
+    local spawned = {}
+    local function despawn_fx()
+        table.insert(spawned, spawn_fx("shadow_despawn", env))
+        table.insert(spawned, spawn_fx("shadow_glob_fx", env))
+    end
+    local sg =
+    {
+        states =
+        {
+            quickdespawn = { onenter = despawn_fx },
+            death = { events = { animover = { fn = despawn_fx } } },
+        },
+    }
+    sg_postinit.fn(sg)
+
+    local inst = new_player(env)
+    get_postinit(env)(inst)
+    local minion = inst.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
+
+    sg.states.quickdespawn.onenter(minion)
+    sg.states.death.events.animover.fn(minion)
+    assert_eq(#spawned, 4, "both despawn handlers spawned their fx")
+    for i, fx in ipairs(spawned) do
+        local label = fx.prefab .. " #" .. i
+        assert_true(fx._wortoxshen_crimson ~= nil and fx._wortoxshen_crimson:value(),
+            label .. " is flagged crimson for clients")
+        local add = fx.AnimState.add_colour_calls[1] or {}
+        assert_true(add[1] == .4 and add[2] == 0 and add[3] == .07 and add[4] == 0,
+            label .. " gets the crimson add colour")
+        assert_eq(#fx.AnimState.colour_calls, 0, label .. " keeps its vanilla multiply")
+    end
+
+    local after = spawn_fx("shadow_despawn", env)
+    assert_eq(#after.AnimState.add_colour_calls, 0, "fx spawned after the handler stays untinted")
+
+    -- Maxwell's minion: post init only, never spawned by Wortox.
+    local maxwell_minion = new_pet("shadowworker", env)
+    env.initialize_prefab("shadowworker", maxwell_minion)
+    spawned = {}
+    sg.states.quickdespawn.onenter(maxwell_minion)
+    for _, fx in ipairs(spawned) do
+        assert_eq(#fx.AnimState.add_colour_calls, 0, "Maxwell's minion fx stay black")
+        assert_eq(fx._wortoxshen_crimson:value(), false, "Maxwell's minion fx are not flagged")
+    end
+
+    -- A game update that renames states must not break the post init.
+    sg_postinit.fn({ states = {} })
+    sg_postinit.fn({ states = { death = {} } })
+    assert_true(true, "missing states are skipped without errors")
+end
+
+-- Clients tint despawn fx from the network flag.
+do
+    local env = load_mod({ codex_umbra = true }, false)
+    local fx = spawn_fx("shadow_glob_fx", env)
+    assert_eq(#fx.AnimState.add_colour_calls, 0, "client fx starts untinted")
+    fx._wortoxshen_crimson:set(true)
+    assert_eq(#fx.AnimState.add_colour_calls, 1, "client fx tints when the flag arrives")
 end
 
 if failures > 0 then

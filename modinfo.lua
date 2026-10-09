@@ -1,7 +1,7 @@
 name = "Wortox Shenanigans"
 description = [[Travessuras para o Wortox.
 
-Codex Umbra: Wortox cria e usa o Codex Umbra como o Maxwell. Invoca trabalhadores e protetores de sombra, lanca armadilha e pilares, com a mesma penalidade de sanidade maxima. Os lacaios dele aparecem como sombras carmesim do proprio Wortox.]]
+Codex Umbra: Wortox cria e usa o Codex Umbra como o Maxwell. Invoca trabalhadores e protetores de sombra, lanca armadilha e pilares, com a mesma penalidade de sanidade maxima. Os lacaios dele sao sombras carmesim com a skin do Wortox, ferramentas pretas e fumaca carmesim ao sumir.]]
 author = "Leonardo"
 version = "0.1.0"
 

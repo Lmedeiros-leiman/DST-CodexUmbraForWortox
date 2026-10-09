@@ -11,7 +11,9 @@ do Maxwell.
 - O Codex invoca trabalhadores e protetores de sombra e lanca a armadilha e os pilares de sombra, gastando combustivel do pesadelo como no Maxwell.
 - Cada lacaio reduz a sanidade maxima do Wortox como no Maxwell (15% por trabalhador, limite de 90%).
 - Os lacaios somem quando Wortox morre, vira fantasma, troca de personagem ou viaja entre superficie e cavernas.
-- Os lacaios copiam a skin do Wortox e aparecem como sombras carmesim.
+- Os lacaios copiam a skin do Wortox (inclusive ao trocar de skin no armario) e aparecem como sombras carmesim translucidas, com a skin ainda reconhecivel.
+- As ferramentas e a espada dos lacaios ficam pretas, como as sombras do Maxwell.
+- A fumaca e a mancha que aparecem quando um lacaio some ficam carmesim. Os lacaios do Maxwell continuam pretos.
 - Wortox tem falas proprias para o Codex.
 
 ## Instalacao local
@@ -22,6 +24,8 @@ do Maxwell.
 4. Reinicie o servidor depois de alterar configuracoes ou arquivos do mod.
 
 ## Notas
+
+A fumaca rapida ao invocar sem animacao e a fumaca ao trocar de skin continuam pretas: o visual delas so existe nos clientes e o mod nao consegue tingi-las.
 
 O mod adiciona a tag `shadowmagic`, que tambem mostra a aba de criacao de
 itens de sombra do Maxwell.
