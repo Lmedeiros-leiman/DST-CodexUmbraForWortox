@@ -98,8 +98,8 @@ local function load_mod(config, ismastersim)
         env.entities_by_guid[inst.GUID] = inst
     end
 
-    env.GLOBAL.net_bool = function(guid, name, dirty_event)
-        local netvar = { guid = guid, name = name, dirty_event = dirty_event, current = false }
+    env.GLOBAL.net_smallbyte = function(guid, name, dirty_event)
+        local netvar = { guid = guid, name = name, dirty_event = dirty_event, current = 0 }
         function netvar:set(value)
             if self.current ~= value then
                 self.current = value
@@ -265,17 +265,33 @@ local function spawn_fx(prefab, env)
     return fx
 end
 
-local function assert_minion_crimson(anim, label)
-    assert_eq(#anim.colour_calls, 1, label .. " sets its multiply once")
-    local mult = anim.colour_calls[1] or {}
+-- Palette hex -> the add colour the mod sends (half strength, see the mod).
+local function tint_add(hex)
+    return {
+        math.floor(hex / 0x10000) % 0x100 / 255 * .5,
+        math.floor(hex / 0x100) % 0x100 / 255 * .5,
+        hex % 0x100 / 255 * .5,
+    }
+end
+
+local IMP_BRICK = 0xA04636
+
+local function assert_add(calls, hex, label)
+    local add = calls[#calls] or {}
+    local expected = tint_add(hex)
+    assert_near(add[1], expected[1], label .. " red")
+    assert_near(add[2], expected[2], label .. " green")
+    assert_near(add[3], expected[3], label .. " blue")
+    assert_eq(add[4], 0, label .. " add alpha")
+end
+
+local function assert_minion_tint(anim, hex, label)
+    local mult = anim.colour_calls[#anim.colour_calls] or {}
     assert_true(mult[1] == 0 and mult[2] == 0 and mult[3] == 0 and mult[4] == .5,
         label .. " uses Maxwell's black silhouette multiply")
-    assert_eq(#anim.add_colour_calls, 1, label .. " sets its add colour once")
-    local add = anim.add_colour_calls[1] or {}
-    assert_true(add[1] == .45 and add[2] == .02 and add[3] == .1 and add[4] == 0,
-        label .. " fills the silhouette with crimson")
+    assert_add(anim.add_colour_calls, hex, label .. " fill")
     assert_eq(#anim.symbol_colour_calls + #anim.symbol_add_colour_calls, 0,
-        label .. " leaves tools in the same crimson silhouette")
+        label .. " leaves tools in the same silhouette")
 end
 
 local function new_pet(prefab, env)
@@ -369,6 +385,10 @@ local function new_player(env)
     end
 
     inst.components.health = new_health()
+    inst.components.skilltreeupdater = { active = {} }
+    function inst.components.skilltreeupdater:IsActivated(skill)
+        return self.active[skill] == true
+    end
     inst.components.sanity =
     {
         penalties = {},
@@ -511,11 +531,11 @@ do
     local worker = inst.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
     assert_near(inst.components.sanity.penalties[worker], .15, "shadowworker adds its sanity penalty")
     assert_eq(worker.components.skinner.last_player, inst, "shadowworker copies the Wortox skins")
-    assert_true(worker._wortoxshen_crimson ~= nil, "shadowworker has a crimson network variable")
-    if worker._wortoxshen_crimson ~= nil then
-        assert_eq(worker._wortoxshen_crimson:value(), true, "shadowworker network tint is enabled")
+    assert_true(worker._wortoxshen_tint ~= nil, "shadowworker has a tint network variable")
+    if worker._wortoxshen_tint ~= nil then
+        assert_eq(worker._wortoxshen_tint:value(), 4, "fresh Wortox sends the neutral, no-allegiance index")
     end
-    assert_minion_crimson(worker.AnimState, "server shadowworker")
+    assert_minion_tint(worker.AnimState, IMP_BRICK, "server shadowworker")
 
     local inspectable = worker.components.inspectable
     assert_true(inspectable ~= nil and inspectable.getstatus ~= nil, "Wortox's shadow can be inspected")
@@ -607,7 +627,7 @@ do
     end
 end
 
--- Clients apply the crimson tint after the network dirty event.
+-- Clients apply the tint after the network dirty event.
 do
     local env = load_mod({ codex_umbra = true }, false)
     local pet = new_pet("shadowworker", env)
@@ -617,10 +637,10 @@ do
         postinit(pet)
     end
     assert_eq(#pet.AnimState.colour_calls, 0, "client minion starts with its default tint")
-    assert_true(pet._wortoxshen_crimson ~= nil, "client minion has a crimson network variable")
-    if pet._wortoxshen_crimson ~= nil then
-        pet._wortoxshen_crimson:set(true)
-        assert_minion_crimson(pet.AnimState, "client shadowworker")
+    assert_true(pet._wortoxshen_tint ~= nil, "client minion has a tint network variable")
+    if pet._wortoxshen_tint ~= nil then
+        pet._wortoxshen_tint:set(4)
+        assert_minion_tint(pet.AnimState, IMP_BRICK, "client shadowworker")
     end
 end
 
@@ -636,13 +656,13 @@ do
     assert_eq(#pet.AnimState.colour_calls, 0, "minion post init alone does not tint it")
     assert_eq(#pet.AnimState.symbol_colour_calls, 0, "minion post init alone keeps its tool colour")
     assert_eq(pet.components.inspectable, nil, "minion post init alone does not make it inspectable")
-    assert_true(pet._wortoxshen_crimson ~= nil, "minion post init creates its crimson network variable")
-    if pet._wortoxshen_crimson ~= nil then
-        assert_eq(pet._wortoxshen_crimson:value(), false, "minion post init leaves its netvar false")
+    assert_true(pet._wortoxshen_tint ~= nil, "minion post init creates its tint network variable")
+    if pet._wortoxshen_tint ~= nil then
+        assert_eq(pet._wortoxshen_tint:value(), 0, "minion post init leaves its tint at 0")
     end
 end
 
--- Despawn fx spawned by a crimson minion's stategraph turn crimson too.
+-- Despawn fx take the colour of the minion whose stategraph spawned them.
 do
     local env = load_mod({ codex_umbra = true }, true)
     assert_eq(#env.sg_postinits, 1, "one stategraph post init is registered")
@@ -674,11 +694,9 @@ do
     assert_eq(#spawned, 4, "both despawn handlers spawned their fx")
     for i, fx in ipairs(spawned) do
         local label = fx.prefab .. " #" .. i
-        assert_true(fx._wortoxshen_crimson ~= nil and fx._wortoxshen_crimson:value(),
-            label .. " is flagged crimson for clients")
-        local add = fx.AnimState.add_colour_calls[1] or {}
-        assert_true(add[1] == .4 and add[2] == 0 and add[3] == .07 and add[4] == 0,
-            label .. " gets the crimson add colour")
+        assert_eq(fx._wortoxshen_tint ~= nil and fx._wortoxshen_tint:value(), 4,
+            label .. " carries the minion's tint index for clients")
+        assert_add(fx.AnimState.add_colour_calls, IMP_BRICK, label .. " add colour")
         assert_eq(#fx.AnimState.colour_calls, 0, label .. " keeps its vanilla multiply")
     end
 
@@ -692,7 +710,7 @@ do
     sg.states.quickdespawn.onenter(maxwell_minion)
     for _, fx in ipairs(spawned) do
         assert_eq(#fx.AnimState.add_colour_calls, 0, "Maxwell's minion fx stay black")
-        assert_eq(fx._wortoxshen_crimson:value(), false, "Maxwell's minion fx are not flagged")
+        assert_eq(fx._wortoxshen_tint:value(), 0, "Maxwell's minion fx are not tinted")
     end
 
     -- A game update that renames states must not break the post init.
@@ -706,8 +724,59 @@ do
     local env = load_mod({ codex_umbra = true }, false)
     local fx = spawn_fx("shadow_glob_fx", env)
     assert_eq(#fx.AnimState.add_colour_calls, 0, "client fx starts untinted")
-    fx._wortoxshen_crimson:set(true)
+    fx._wortoxshen_tint:set(4)
     assert_eq(#fx.AnimState.add_colour_calls, 1, "client fx tints when the flag arrives")
+end
+
+-- Every lean/allegiance pair picks its palette cell, and skill changes
+-- recolour shadows that are already out.
+do
+    local expected =
+    {
+        { nil, nil, 0xA04636 }, { "nice", nil, 0xB36955 }, { "naughty", nil, 0x7F3428 },
+        { nil, "lunar", 0x456478 }, { "nice", "lunar", 0x6B8DA6 }, { "naughty", "lunar", 0x253341 },
+        { nil, "shadow", 0x6B1F2A }, { "nice", "shadow", 0x8C2F3C }, { "naughty", "shadow", 0x3D1016 },
+    }
+    for _, case in ipairs(expected) do
+        local lean, allegiance, hex = case[1], case[2], case[3]
+        local label = (lean or "neutral") .. "/" .. (allegiance or "none")
+        local env = load_mod({ codex_umbra = true }, true)
+        local inst = new_player(env)
+        get_postinit(env)(inst)
+        inst.wortox_inclination = lean
+        if allegiance ~= nil then
+            inst.components.skilltreeupdater.active["wortox_allegiance_" .. allegiance] = true
+        end
+        local pet = inst.components.petleash:SpawnPetAt(0, 0, 0, "shadowprotector")
+        assert_minion_tint(pet.AnimState, hex, label)
+    end
+
+    local env = load_mod({ codex_umbra = true }, true)
+    local inst = new_player(env)
+    get_postinit(env)(inst)
+    local pet = inst.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
+    assert_minion_tint(pet.AnimState, 0xA04636, "before respec")
+
+    inst.wortox_inclination = "naughty"
+    inst:PushEvent("wortox_inclination_changed")
+    assert_minion_tint(pet.AnimState, 0x7F3428, "after turning naughty")
+
+    inst.components.skilltreeupdater.active.wortox_allegiance_shadow = true
+    inst:PushEvent("onactivateskill_server", { skill = "wortox_allegiance_shadow" })
+    assert_minion_tint(pet.AnimState, 0x3D1016, "after joining the shadow")
+    assert_eq(pet._wortoxshen_tint:value(), 9, "naughty shadow is the last palette cell")
+
+    inst.components.skilltreeupdater.active.wortox_allegiance_shadow = nil
+    inst:PushEvent("ondeactivateskill_server", { skill = "wortox_allegiance_shadow" })
+    assert_minion_tint(pet.AnimState, 0x7F3428, "after a respec drops the allegiance")
+
+    inst.wortox_inclination = "nice"
+    inst:PushEvent("ms_skilltreeinitialized")
+    assert_minion_tint(pet.AnimState, 0xB36955, "after the skill tree loads")
+
+    local critter = inst.components.petleash:SpawnPetAt(0, 0, 0, "critter")
+    inst:PushEvent("ms_skilltreeinitialized")
+    assert_eq(#critter.AnimState.add_colour_calls, 0, "retinting skips non-shadow pets")
 end
 
 if failures > 0 then
