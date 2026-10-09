@@ -1,4 +1,4 @@
--- Lua 5.1 harness for the Wortox Shenanigans features.
+-- Lua 5.1 harness for the Codex Umbra for Wortox features.
 -- Run from the mod root: lua5.1 test/test_mod.lua
 
 local mod_root = arg[0]:match("^(.*)/test/test_mod%.lua$")

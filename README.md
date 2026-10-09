@@ -1,4 +1,4 @@
-# DST Wortox Shenanigans
+# DST Codex Umbra for Wortox
 
 Mod para Don't Starve Together que da ao Wortox acesso aos truques de sombra
 do Maxwell.

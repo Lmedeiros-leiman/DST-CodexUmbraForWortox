@@ -1,4 +1,4 @@
--- Wortox Shenanigans
+-- Codex Umbra for Wortox
 -- Adds approved feature modules to Wortox without replacing vanilla behavior.
 
 local codex_umbra = GetModConfigData("codex_umbra") ~= false

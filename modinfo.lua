@@ -1,5 +1,5 @@
-name = "Wortox Shenanigans"
-description = [[Travessuras para o Wortox.
+name = "Codex Umbra for Wortox"
+description = [[O Wortox aprende a magia de sombra do Maxwell.
 
 Codex Umbra: Wortox cria e usa o Codex Umbra como o Maxwell. Invoca trabalhadores e protetores de sombra, lanca armadilha e pilares, com a mesma penalidade de sanidade maxima. Os lacaios dele sao silhuetas com a forma da skin do Wortox, coloridas conforme a inclinacao e a alianca da arvore de habilidades, e podem ser examinados.
 
