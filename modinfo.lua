@@ -18,8 +18,8 @@ reign_of_giants_compatible = false
 all_clients_require_mod = true
 client_only_mod = false
 
-icon = nil
-icon_atlas = nil
+icon = "modicon.tex"
+icon_atlas = "modicon.xml"
 
 server_filter_tags =
 {
