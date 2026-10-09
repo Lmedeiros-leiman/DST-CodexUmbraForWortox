@@ -155,21 +155,14 @@ local function OnLoad(inst, original, ...)
     OnSkinsChanged(inst, { nofx = true })
 end
 
-local strings = GLOBAL.STRINGS or {}
-GLOBAL.STRINGS = strings
-strings.CHARACTERS = strings.CHARACTERS or {}
-strings.CHARACTERS.WORTOX = strings.CHARACTERS.WORTOX or {}
-strings.CHARACTERS.WORTOX.ACTIONFAIL = strings.CHARACTERS.WORTOX.ACTIONFAIL or {}
-strings.CHARACTERS.WORTOX.ACTIONFAIL.CASTAOE = strings.CHARACTERS.WORTOX.ACTIONFAIL.CASTAOE or {}
-strings.CHARACTERS.WORTOX.DESCRIBE = strings.CHARACTERS.WORTOX.DESCRIBE or {}
-strings.CHARACTERS.WORTOX.DESCRIBE.WAXWELLJOURNAL =
-    strings.CHARACTERS.WORTOX.DESCRIBE.WAXWELLJOURNAL or {}
-
-strings.CHARACTERS.WORTOX.ACTIONFAIL.CASTAOE.NO_MAX_SANITY =
+-- Vanilla speech_wortox.lua already defines these tables; NO_MAX_SANITY and
+-- NEEDSFUEL otherwise fall back to Wilson's "only_used_by_waxwell".
+local wortox_speech = GLOBAL.STRINGS.CHARACTERS.WORTOX
+wortox_speech.ACTIONFAIL.CASTAOE.NO_MAX_SANITY =
     "Hyuyu, my head is too crowded with shadows already!"
-strings.CHARACTERS.WORTOX.DESCRIBE.WAXWELLJOURNAL.GENERIC =
+wortox_speech.DESCRIBE.WAXWELLJOURNAL.GENERIC =
     "The old magician's tricks, mine to borrow! Hyuyu!"
-strings.CHARACTERS.WORTOX.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL =
+wortox_speech.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL =
     "It hungers for nightmares, as do I for souls."
 
 AddPrefabPostInit("wortox", function(inst)

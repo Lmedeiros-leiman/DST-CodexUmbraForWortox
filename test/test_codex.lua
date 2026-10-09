@@ -56,12 +56,26 @@ local function load_mod(config, ismastersim)
             {
                 CHARACTERS =
                 {
-                    WORTOX = {},
+                    -- Mirrors the tables vanilla speech_wortox.lua defines.
+                    WORTOX =
+                    {
+                        ACTIONFAIL = { CASTAOE = {} },
+                        DESCRIBE = { WAXWELLJOURNAL = {} },
+                    },
                 },
             },
         },
+        -- Same Lua globals DST's CreateEnvironment (mods.lua) exposes to mods.
+        pairs = pairs,
+        ipairs = ipairs,
+        print = print,
+        math = math,
+        table = table,
+        type = type,
+        string = string,
+        tostring = tostring,
+        require = require,
     }
-    setmetatable(env, { __index = _G })
     env.env = env
 
     env.GLOBAL.SpawnPrefab = function()

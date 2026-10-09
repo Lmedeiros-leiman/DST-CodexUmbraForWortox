@@ -5,16 +5,19 @@ do Maxwell.
 
 ## O que ele faz
 
-- Feature 1: Wortox pode criar e usar o Codex Umbra como o Maxwell.
-- O Codex pode invocar trabalhadores e protetores de sombra.
-- O Codex tambem oferece os feiticos de armadilha e pilares.
-- Os minions de sombra usam a mesma penalidade de sanidade maxima do Maxwell.
-- Os lacaios de sombra do Wortox ficam carmesim.
+### Codex Umbra
+
+- Wortox cria o Codex Umbra pela aba de sombra do Maxwell (2 papiro, 2 combustivel do pesadelo, 50 de vida).
+- O Codex invoca trabalhadores e protetores de sombra e lanca a armadilha e os pilares de sombra, gastando combustivel do pesadelo como no Maxwell.
+- Cada lacaio reduz a sanidade maxima do Wortox como no Maxwell (15% por trabalhador, limite de 90%).
+- Os lacaios somem quando Wortox morre, vira fantasma, troca de personagem ou viaja entre superficie e cavernas.
+- Os lacaios copiam a skin do Wortox e aparecem como sombras carmesim.
+- Wortox tem falas proprias para o Codex.
 
 ## Instalacao local
 
 1. Feche Don't Starve Together.
-2. Copie estes arquivos para `mods/wortox_shenanigans` na instalacao do jogo.
+2. Copie `modinfo.lua`, `modmain.lua` e `wortox_shenanigans_codex.lua` para `mods/wortox_shenanigans` na instalacao do jogo. O caminho Steam padrao no Linux e `~/.local/share/Steam/steamapps/common/Don't Starve Together/mods/wortox_shenanigans`.
 3. Ative o mod para o servidor e deixe a opcao `Codex Umbra` ativada.
 4. Reinicie o servidor depois de alterar configuracoes ou arquivos do mod.
 
