@@ -1,0 +1,46 @@
+[h1]Codex Umbra for Wortox[/h1]
+Wortox gets his claws on Maxwell's Codex Umbra. Summon shadows in your own colours, hear what Wortox thinks of them, and call a dancing shadow troupe with your panflute.
+
+[h2]Codex Umbra[/h2]
+[list]
+[*]Wortox crafts the Codex Umbra from Maxwell's shadow tab (2 papyrus, 2 nightmare fuel, 50 health) and uses it exactly like Maxwell: shadow workers, shadow protectors, shadow trap and shadow pillars.
+[*]Same rules as Maxwell: spells cost nightmare fuel and each minion lowers max sanity (15% per worker, 90% cap).
+[*]Minions vanish when Wortox dies, becomes a ghost, swaps character or travels between the surface and the caves.
+[/list]
+
+[h2]Shadows in Wortox's colours[/h2]
+[list]
+[*]Minions are translucent silhouettes like Maxwell's, shaped like your Wortox skin (wardrobe changes included).
+[*]Their colour follows your skill tree: Nice is rose, Neutral crimson, Naughty a dark blood red. Lunar allegiance turns them into glowing cyan, gestalt-like shades; Shadow allegiance darkens them toward wine and violet.
+[*]They keep a little light of their own, so you can still spot them at night.
+[*]Shadows already out recolour the moment your skills change.
+[/list]
+
+[h2]A voice of their own[/h2]
+Wortox's minions can be examined. Wortox has one line for his own shadow and another for someone else's, and Maxwell is not amused to find his notes rifled through. Wortox also gets new lines for the Codex.
+
+[h2]Panflute Troupe[/h2]
+Play the panflute while carrying the Codex Umbra and three shadow dancers in your colour appear around you for a short show. Purely cosmetic: no sanity cost, never saved, and they don't scare the wildlife.
+
+[h2]Options[/h2]
+[list]
+[*][b]Codex Umbra[/b]: on / off.
+[*][b]Panflute Troupe[/b]: on / off.
+[*][b]Language[/b]: Auto (server language), English, Português, 简体中文, Русский.
+[/list]
+
+[h2]Languages[/h2]
+English, Brazilian Portuguese, Simplified Chinese (Steam and WeGame) and Russian. The mod list follows each player's game language; Wortox's lines follow the server's language unless the Language option picks one.
+
+[h2]Good to know[/h2]
+[list]
+[*]Every player needs the mod.
+[*]Learning shadow magic also shows Maxwell's magician top hat and chest recipes. Wortox isn't a magician, so the top hat works as a plain hat.
+[*]Maxwell plays exactly as in the base game.
+[/list]
+
+[h2]Source and feedback[/h2]
+Source code on [url=https://github.com/Lmedeiros-leiman/DST-CodexUmbraForWortox]GitHub[/url]. Bug reports and translation fixes are welcome in the comments or on GitHub.
+
+[h2]Credits[/h2]
+Don't Starve Together, Wortox, Maxwell and the Codex Umbra belong to Klei Entertainment. The mod icon is assembled from game art. This is an unofficial fan mod, not made or endorsed by Klei.

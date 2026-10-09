@@ -1,0 +1,46 @@
+[h1]Codex Umbra para o Wortox[/h1]
+O Wortox botou as garras no Codex Umbra do Maxwell. Invoque sombras com as suas cores, ouça o que o Wortox acha delas e chame uma trupe de sombras dançarinas com a sua flauta de pã.
+
+[h2]Codex Umbra[/h2]
+[list]
+[*]O Wortox cria o Codex Umbra pela aba de sombra do Maxwell (2 papiros, 2 combustíveis do pesadelo, 50 de vida) e usa exatamente como o Maxwell: trabalhadores de sombra, protetores de sombra, armadilha de sombra e pilares de sombra.
+[*]Mesmas regras do Maxwell: os feitiços gastam combustível do pesadelo e cada lacaio reduz a sanidade máxima (15% por trabalhador, limite de 90%).
+[*]Os lacaios somem quando o Wortox morre, vira fantasma, troca de personagem ou viaja entre a superfície e as cavernas.
+[/list]
+
+[h2]Sombras com as cores do Wortox[/h2]
+[list]
+[*]Os lacaios são silhuetas translúcidas como as do Maxwell, com o formato da sua skin do Wortox (inclusive trocando no armário).
+[*]A cor segue a sua árvore de habilidades: Bonzinho é rosado, Neutro é carmesim, Travesso é um vermelho sangue escuro. A aliança Lunar deixa as sombras ciano e brilhantes, como um gestalt; a aliança Sombra escurece tudo puxando para vinho e violeta.
+[*]Elas guardam um pouco de luz própria, então dá para enxergar à noite.
+[*]As sombras que já estão fora mudam de cor assim que as habilidades mudam.
+[/list]
+
+[h2]Com falas próprias[/h2]
+Os lacaios do Wortox podem ser examinados. O Wortox tem uma fala para a própria sombra e outra para a sombra de outro jogador, e o Maxwell não gosta nada de saber que andaram fuçando nas anotações dele. O Wortox também ganha falas novas para o Codex.
+
+[h2]Trupe da Flauta[/h2]
+Toque a flauta de pã carregando o Codex Umbra e três sombras dançarinas com a sua cor aparecem ao seu redor para um showzinho. Só visual: não custa sanidade, não é salvo e não espanta os bichos.
+
+[h2]Opções[/h2]
+[list]
+[*][b]Codex Umbra[/b]: ativado / desativado.
+[*][b]Trupe da Flauta[/b]: ativado / desativado.
+[*][b]Idioma[/b]: Automático (idioma do servidor), English, Português, 简体中文, Русский.
+[/list]
+
+[h2]Idiomas[/h2]
+Inglês, português do Brasil, chinês simplificado (Steam e WeGame) e russo. A lista de mods segue o idioma do jogo de cada jogador; as falas do Wortox seguem o idioma do servidor, a não ser que a opção Idioma escolha outro.
+
+[h2]Bom saber[/h2]
+[list]
+[*]Todos os jogadores precisam do mod.
+[*]Aprender a magia de sombra também mostra as receitas do chapéu e do baú de mágico do Maxwell. O Wortox não é mágico, então o chapéu funciona como um chapéu comum.
+[*]O Maxwell continua exatamente como no jogo base.
+[/list]
+
+[h2]Código e sugestões[/h2]
+Código-fonte no [url=https://github.com/Lmedeiros-leiman/DST-CodexUmbraForWortox]GitHub[/url]. Relatos de bugs e correções de tradução são bem-vindos nos comentários ou no GitHub.
+
+[h2]Créditos[/h2]
+Don't Starve Together, Wortox, Maxwell e o Codex Umbra pertencem à Klei Entertainment. O ícone do mod foi montado com arte do jogo. Este é um mod de fã não oficial, sem vínculo com a Klei.
