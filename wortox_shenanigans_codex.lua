@@ -1,11 +1,14 @@
--- Look of Wortox's shadows. The anim shader computes texel * colour, so a
--- multiply keeps the shading of the copied skin while pulling every hue
--- toward crimson: red fur turns deep crimson, dark details stay black and
--- light details turn crimson-pink. Alpha .5 is Maxwell's shadow translucency.
-local MINION_MULT = { .6, .05, .12, .5 }
--- Tools stay pure black like Maxwell's. A black multiply on the tool symbol
--- is black whether the engine combines it with the entity colour or uses it
--- instead, which is why minions use no add colour.
+-- Look of Wortox's shadows: Maxwell's flat silhouette, in crimson. The
+-- black multiply is Maxwell's own (it erases every skin detail, alpha .5 is
+-- his translucency) and the add colour fills the silhouette with crimson.
+-- The anim shader weights the add by the texel's alpha, so only the shape
+-- turns red, never the empty space around it.
+local MINION_MULT = { 0, 0, 0, .5 }
+local MINION_ADD = { .45, .02, .1, 0 }
+-- Tools stay pure black like Maxwell's. The tool symbol gets a black
+-- multiply plus the negated crimson add: if the engine sums symbol and entity
+-- colours the add cancels to black, and if the symbol colour replaces the
+-- entity colour the negative add clamps to black.
 local TOOL_SYMBOL = "swap_object"
 -- The despawn smoke art is near black, so a multiply cannot redden it. The
 -- add colour is weighted by alpha, so the transparent parts stay clear.
@@ -31,7 +34,9 @@ local SHADOW_FX_PREFABS =
 
 local function ApplyMinionCrimson(inst)
     inst.AnimState:SetMultColour(MINION_MULT[1], MINION_MULT[2], MINION_MULT[3], MINION_MULT[4])
+    inst.AnimState:SetAddColour(MINION_ADD[1], MINION_ADD[2], MINION_ADD[3], MINION_ADD[4])
     inst.AnimState:SetSymbolMultColour(TOOL_SYMBOL, 0, 0, 0, 1)
+    inst.AnimState:SetSymbolAddColour(TOOL_SYMBOL, -MINION_ADD[1], -MINION_ADD[2], -MINION_ADD[3], 0)
 end
 
 local function ApplyFxCrimson(inst)
@@ -111,6 +116,23 @@ AddStategraphPostInit("shadowmaxwell", function(sg)
     end
 end)
 
+-- Vanilla shadow minions have no inspectable component, so nobody can examine
+-- them. Wortox's can: the leader sees WORTOX_MINE, everyone else (another
+-- Wortox included) sees WORTOX_OTHER. The strings live under the minions'
+-- name override, SHADOWWAXWELL, and only use these statuses, so Maxwell's
+-- shadows never pick up these lines.
+local function GetShadowStatus(inst, viewer)
+    local leader = inst.components.follower ~= nil and inst.components.follower:GetLeader() or nil
+    return leader ~= nil and leader == viewer and "WORTOX_MINE" or "WORTOX_OTHER"
+end
+
+local function MakeInspectable(pet)
+    if pet.components.inspectable == nil then
+        pet:AddComponent("inspectable")
+    end
+    pet.components.inspectable.getstatus = GetShadowStatus
+end
+
 local function KillPet(pet)
     if pet.components.health:IsInvincible() then
         pet._killtask = pet:DoTaskInTime(.5, KillPet)
@@ -122,6 +144,7 @@ end
 local function OnSpawnPet(inst, pet)
     if pet:HasTag("shadowminion") then
         MakeCrimson(pet, ApplyMinionCrimson)
+        MakeInspectable(pet)
         if not (inst.components.health:IsDead() or inst:HasTag("playerghost")) then
             inst.components.sanity:AddSanityPenalty(pet,
                 GLOBAL.TUNING.SHADOWWAXWELL_SANITY_PENALTY[string.upper(pet.prefab)])
@@ -235,6 +258,20 @@ wortox_speech.DESCRIBE.WAXWELLJOURNAL.GENERIC =
     "His shadowy tricks are mine to mix, hyuyu!"
 wortox_speech.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL =
     "Empty of dread, the book plays dead."
+
+local function SetShadowDescription(character, status, line)
+    local describe = GLOBAL.STRINGS.CHARACTERS[character].DESCRIBE
+    if type(describe.SHADOWWAXWELL) ~= "table" then
+        describe.SHADOWWAXWELL = { GENERIC = describe.SHADOWWAXWELL }
+    end
+    describe.SHADOWWAXWELL[status] = line
+end
+
+SetShadowDescription("WORTOX", "WORTOX_MINE", "My shadow, my double, my partner in trouble!")
+SetShadowDescription("WORTOX", "WORTOX_OTHER", "Another imp's shade! What mischief we've made!")
+SetShadowDescription("WAXWELL", "WORTOX_OTHER", "That imp has been rifling through my notes.")
+-- Everyone else falls back to the generic (Wilson) table.
+SetShadowDescription("GENERIC", "WORTOX_OTHER", "That shadow has a devilish tint.")
 
 AddPrefabPostInit("wortox", function(inst)
     inst:AddTag("shadowmagic")

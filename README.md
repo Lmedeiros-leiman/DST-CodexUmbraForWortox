@@ -11,7 +11,8 @@ do Maxwell.
 - O Codex invoca trabalhadores e protetores de sombra e lanca a armadilha e os pilares de sombra, gastando combustivel do pesadelo como no Maxwell.
 - Cada lacaio reduz a sanidade maxima do Wortox como no Maxwell (15% por trabalhador, limite de 90%).
 - Os lacaios somem quando Wortox morre, vira fantasma, troca de personagem ou viaja entre superficie e cavernas.
-- Os lacaios copiam a skin do Wortox (inclusive ao trocar de skin no armario) e aparecem como sombras carmesim translucidas, com a skin ainda reconhecivel.
+- Os lacaios sao silhuetas carmesim translucidas, como as sombras do Maxwell, e copiam a skin do Wortox (inclusive ao trocar de skin no armario), que aparece no formato da silhueta.
+- Os lacaios do Wortox podem ser examinados: o dono tem uma fala, outro Wortox tem outra, o Maxwell tem uma fala propria e os demais personagens usam uma fala generica. As sombras do Maxwell continuam sem exame, como no jogo base.
 - As ferramentas e a espada dos lacaios ficam pretas, como as sombras do Maxwell.
 - A fumaca e a mancha que aparecem quando um lacaio some ficam carmesim. Os lacaios do Maxwell continuam pretos.
 - Wortox tem falas proprias para o Codex.

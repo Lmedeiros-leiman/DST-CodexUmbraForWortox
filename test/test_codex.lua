@@ -63,6 +63,8 @@ local function load_mod(config, ismastersim)
                         ACTIONFAIL = { CASTAOE = {} },
                         DESCRIBE = { WAXWELLJOURNAL = {} },
                     },
+                    WAXWELL = { DESCRIBE = {} },
+                    GENERIC = { DESCRIBE = {} },
                 },
             },
         },
@@ -238,6 +240,7 @@ local function new_anim_state()
         colour_calls = {},
         symbol_colour_calls = {},
         add_colour_calls = {},
+        symbol_add_colour_calls = {},
         SetMultColour = function(self, r, g, b, a)
             table.insert(self.colour_calls, { r, g, b, a })
         end,
@@ -246,6 +249,9 @@ local function new_anim_state()
         end,
         SetAddColour = function(self, r, g, b, a)
             table.insert(self.add_colour_calls, { r, g, b, a })
+        end,
+        SetSymbolAddColour = function(self, symbol, r, g, b, a)
+            table.insert(self.symbol_add_colour_calls, { symbol, r, g, b, a })
         end,
     }
 end
@@ -260,17 +266,22 @@ local function spawn_fx(prefab, env)
 end
 
 local function assert_minion_crimson(anim, label)
-    assert_eq(#anim.colour_calls, 1, label .. " applies the crimson multiply once")
+    assert_eq(#anim.colour_calls, 1, label .. " sets its multiply once")
     local mult = anim.colour_calls[1] or {}
-    assert_near(mult[1], .6, label .. " crimson red multiplier")
-    assert_near(mult[2], .05, label .. " crimson green multiplier")
-    assert_near(mult[3], .12, label .. " crimson blue multiplier")
-    assert_near(mult[4], .5, label .. " keeps Maxwell's shadow alpha")
+    assert_true(mult[1] == 0 and mult[2] == 0 and mult[3] == 0 and mult[4] == .5,
+        label .. " uses Maxwell's black silhouette multiply")
+    assert_eq(#anim.add_colour_calls, 1, label .. " sets its add colour once")
+    local add = anim.add_colour_calls[1] or {}
+    assert_true(add[1] == .45 and add[2] == .02 and add[3] == .1 and add[4] == 0,
+        label .. " fills the silhouette with crimson")
     local tool = anim.symbol_colour_calls[1] or {}
     assert_eq(tool[1], "swap_object", label .. " tints the tool symbol")
     assert_true(tool[2] == 0 and tool[3] == 0 and tool[4] == 0 and tool[5] == 1,
-        label .. " makes the tool pure black")
-    assert_eq(#anim.add_colour_calls, 0, label .. " uses no add colour")
+        label .. " multiplies the tool to black")
+    local tool_add = anim.symbol_add_colour_calls[1] or {}
+    assert_eq(tool_add[1], "swap_object", label .. " cancels the add on the tool symbol")
+    assert_true(tool_add[2] == -add[1] and tool_add[3] == -add[2] and tool_add[4] == -add[3]
+        and tool_add[5] == 0, label .. " tool add is the negated crimson")
 end
 
 local function new_pet(prefab, env)
@@ -318,6 +329,10 @@ local function new_pet(prefab, env)
         env.register_entity(pet)
     end
     pet:AddTag("shadowminion")
+
+    function pet:AddComponent(name)
+        self.components[name] = {}
+    end
 
     function pet:Remove()
         if not self.removed then
@@ -420,6 +435,8 @@ local function new_player(env)
         if self.owner._test_env ~= nil then
             self.owner._test_env.initialize_prefab(prefab, pet)
         end
+        local owner = self.owner
+        pet.components.follower = { GetLeader = function() return owner end }
         table.insert(self.pets, pet)
         self.onspawnfn(self.owner, pet)
         return pet
@@ -505,6 +522,18 @@ do
         assert_eq(worker._wortoxshen_crimson:value(), true, "shadowworker network tint is enabled")
     end
     assert_minion_crimson(worker.AnimState, "server shadowworker")
+
+    local inspectable = worker.components.inspectable
+    assert_true(inspectable ~= nil and inspectable.getstatus ~= nil, "Wortox's shadow can be inspected")
+    if inspectable ~= nil and inspectable.getstatus ~= nil then
+        assert_eq(inspectable.getstatus(worker, inst), "WORTOX_MINE", "owner sees the WORTOX_MINE status")
+        assert_eq(inspectable.getstatus(worker, { prefab = "wortox" }), "WORTOX_OTHER",
+            "another Wortox sees the WORTOX_OTHER status")
+        worker.components.follower = nil
+        assert_eq(inspectable.getstatus(worker, inst), "WORTOX_OTHER", "leaderless shadow reads as someone else's")
+    end
+    local critter_inspect = critter.components.inspectable
+    assert_eq(critter_inspect, nil, "non-shadow pets do not become inspectable")
     worker:PushEvent("onremove")
     assert_eq(inst.components.sanity.penalties[worker], nil, "removed shadowworker loses its sanity penalty")
 
@@ -545,6 +574,17 @@ do
         "No room, no room! My head's too full of gloom!", "Wortox max sanity string is set")
     assert_eq(env.GLOBAL.STRINGS.CHARACTERS.WORTOX.DESCRIBE.WAXWELLJOURNAL.GENERIC,
         "His shadowy tricks are mine to mix, hyuyu!", "Wortox Codex description is set")
+    local chars = env.GLOBAL.STRINGS.CHARACTERS
+    assert_eq(chars.WORTOX.DESCRIBE.SHADOWWAXWELL.WORTOX_MINE,
+        "My shadow, my double, my partner in trouble!", "Wortox line for his own shadow")
+    assert_eq(chars.WORTOX.DESCRIBE.SHADOWWAXWELL.WORTOX_OTHER,
+        "Another imp's shade! What mischief we've made!", "Wortox line for another imp's shadow")
+    assert_eq(chars.WORTOX.DESCRIBE.SHADOWWAXWELL.GENERIC, nil, "Wortox has no line for Maxwell's shadows")
+    assert_eq(chars.WAXWELL.DESCRIBE.SHADOWWAXWELL.WORTOX_OTHER,
+        "That imp has been rifling through my notes.", "Maxwell line for Wortox's shadow")
+    assert_eq(chars.GENERIC.DESCRIBE.SHADOWWAXWELL.WORTOX_OTHER,
+        "That shadow has a devilish tint.", "generic line for Wortox's shadow")
+
     assert_eq(env.GLOBAL.STRINGS.CHARACTERS.WORTOX.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL,
         "Empty of dread, the book plays dead.", "Wortox Codex fuel description is set")
 end
@@ -601,6 +641,7 @@ do
     end
     assert_eq(#pet.AnimState.colour_calls, 0, "minion post init alone does not tint it")
     assert_eq(#pet.AnimState.symbol_colour_calls, 0, "minion post init alone keeps its tool colour")
+    assert_eq(pet.components.inspectable, nil, "minion post init alone does not make it inspectable")
     assert_true(pet._wortoxshen_crimson ~= nil, "minion post init creates its crimson network variable")
     if pet._wortoxshen_crimson ~= nil then
         assert_eq(pet._wortoxshen_crimson:value(), false, "minion post init leaves its netvar false")
