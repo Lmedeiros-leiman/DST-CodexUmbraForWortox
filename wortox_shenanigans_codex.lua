@@ -144,15 +144,41 @@ local function OnLoad(inst, original, ...)
     OnSkinsChanged(inst, { nofx = true })
 end
 
+-- Lines per game language (LOC code), English otherwise. Speech is resolved
+-- on the server and broadcast as text, so the host's language is what every
+-- player hears. The Portuguese follows the official translation, where
+-- Wortox's "hyuyu" is "huehue".
+local LINES =
+{
+    en =
+    {
+        no_max_sanity = "No room, no room! My head's too full of gloom!",
+        codex = "His shadowy tricks are mine to mix, hyuyu!",
+        codex_needsfuel = "Empty of dread, the book plays dead.",
+        shadow_mine = "My shadow, my double, my partner in trouble!",
+        shadow_other = "Another imp's shade! What mischief we've made!",
+        shadow_maxwell = "That imp has been rifling through my notes.",
+        shadow_generic = "That shadow has a devilish tint.",
+    },
+    pt =
+    {
+        no_max_sanity = "Chega, chega! Minha mente já não sossega!",
+        codex = "Magia de sombra, que delícia! Agora é minha essa malícia, huehue!",
+        codex_needsfuel = "Sem medo pra comer, o livro finge morrer.",
+        shadow_mine = "Minha sombra, meu par, parceira pra aprontar!",
+        shadow_other = "Outro diabinho e sua sombra! Que travessura nessa penumbra!",
+        shadow_maxwell = "Aquele diabrete andou mexendo nas minhas anotações.",
+        shadow_generic = "Essa sombra tem um tom diabólico.",
+    },
+}
+local lines = LINES[GLOBAL.LOC ~= nil and GLOBAL.LOC.GetLocaleCode() or "en"] or LINES.en
+
 -- Vanilla speech_wortox.lua already defines these tables; NO_MAX_SANITY and
 -- NEEDSFUEL otherwise fall back to Wilson's "only_used_by_waxwell".
 local wortox_speech = GLOBAL.STRINGS.CHARACTERS.WORTOX
-wortox_speech.ACTIONFAIL.CASTAOE.NO_MAX_SANITY =
-    "No room, no room! My head's too full of gloom!"
-wortox_speech.DESCRIBE.WAXWELLJOURNAL.GENERIC =
-    "His shadowy tricks are mine to mix, hyuyu!"
-wortox_speech.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL =
-    "Empty of dread, the book plays dead."
+wortox_speech.ACTIONFAIL.CASTAOE.NO_MAX_SANITY = lines.no_max_sanity
+wortox_speech.DESCRIBE.WAXWELLJOURNAL.GENERIC = lines.codex
+wortox_speech.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL = lines.codex_needsfuel
 
 local function SetShadowDescription(character, status, line)
     local describe = GLOBAL.STRINGS.CHARACTERS[character].DESCRIBE
@@ -162,11 +188,11 @@ local function SetShadowDescription(character, status, line)
     describe.SHADOWWAXWELL[status] = line
 end
 
-SetShadowDescription("WORTOX", "WORTOX_MINE", "My shadow, my double, my partner in trouble!")
-SetShadowDescription("WORTOX", "WORTOX_OTHER", "Another imp's shade! What mischief we've made!")
-SetShadowDescription("WAXWELL", "WORTOX_OTHER", "That imp has been rifling through my notes.")
+SetShadowDescription("WORTOX", "WORTOX_MINE", lines.shadow_mine)
+SetShadowDescription("WORTOX", "WORTOX_OTHER", lines.shadow_other)
+SetShadowDescription("WAXWELL", "WORTOX_OTHER", lines.shadow_maxwell)
 -- Everyone else falls back to the generic (Wilson) table.
-SetShadowDescription("GENERIC", "WORTOX_OTHER", "That shadow has a devilish tint.")
+SetShadowDescription("GENERIC", "WORTOX_OTHER", lines.shadow_generic)
 
 AddPrefabPostInit("wortox", function(inst)
     inst:AddTag("shadowmagic")

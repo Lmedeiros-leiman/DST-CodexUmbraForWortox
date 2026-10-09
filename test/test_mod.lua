@@ -31,7 +31,7 @@ local function assert_near(actual, expected, label)
     end
 end
 
-local function load_mod(config, ismastersim)
+local function load_mod(config, ismastersim, locale)
     local env =
     {
         MODROOT = mod_root .. "/",
@@ -113,6 +113,10 @@ local function load_mod(config, ismastersim)
             return self.current
         end
         return netvar
+    end
+
+    if locale ~= nil then
+        env.GLOBAL.LOC = { GetLocaleCode = function() return locale end }
     end
 
     env.GetModConfigData = function(name)
@@ -990,6 +994,56 @@ do
     local wortox = new_musician(env, "wortox")
     flute.components.instrument.onplayed(flute, wortox)
     assert_eq(#env.dancers, 0, "clients spawn no dancers")
+end
+
+-- Wortox's lines follow the game language, English otherwise.
+do
+    local function lines_for(locale)
+        local chars = load_mod({}, true, locale).GLOBAL.STRINGS.CHARACTERS
+        return {
+            chars.WORTOX.ACTIONFAIL.CASTAOE.NO_MAX_SANITY,
+            chars.WORTOX.DESCRIBE.WAXWELLJOURNAL.GENERIC,
+            chars.WORTOX.DESCRIBE.WAXWELLJOURNAL.NEEDSFUEL,
+            chars.WORTOX.DESCRIBE.SHADOWWAXWELL.WORTOX_MINE,
+            chars.WORTOX.DESCRIBE.SHADOWWAXWELL.WORTOX_OTHER,
+            chars.WAXWELL.DESCRIBE.SHADOWWAXWELL.WORTOX_OTHER,
+            chars.GENERIC.DESCRIBE.SHADOWWAXWELL.WORTOX_OTHER,
+        }
+    end
+    local en, pt, fr, none = lines_for("en"), lines_for("pt"), lines_for("fr"), lines_for(nil)
+    assert_eq(pt[1], "Chega, chega! Minha mente já não sossega!", "Portuguese max sanity line")
+    assert_eq(pt[2], "Magia de sombra, que delícia! Agora é minha essa malícia, huehue!", "Portuguese Codex line")
+    assert_eq(pt[4], "Minha sombra, meu par, parceira pra aprontar!", "Portuguese own-shadow line")
+    for i = 1, #en do
+        assert_true(type(pt[i]) == "string" and pt[i] ~= en[i], "line " .. i .. " has its own Portuguese text")
+        assert_eq(fr[i], en[i], "line " .. i .. " falls back to English for other languages")
+        assert_eq(none[i], en[i], "line " .. i .. " is English when the game reports no locale")
+    end
+end
+
+-- The mod list text follows the locale DST hands to modinfo.
+do
+    local function modinfo_for(locale)
+        local env = { locale = locale }
+        local chunk = assert(loadfile(mod_root .. "/modinfo.lua"))
+        setfenv(chunk, env)
+        chunk()
+        return env
+    end
+    local en, pt = modinfo_for("en"), modinfo_for("pt")
+    assert_eq(en.name, "Codex Umbra for Wortox", "English mod name")
+    assert_eq(pt.name, "Codex Umbra para o Wortox", "Portuguese mod name")
+    assert_eq(modinfo_for(nil).name, en.name, "no locale falls back to English")
+    assert_true(en.description ~= pt.description, "description is translated")
+    for i, option in ipairs(en.configuration_options) do
+        local pt_option = pt.configuration_options[i]
+        assert_eq(pt_option.name, option.name, option.name .. " keeps its config key in both languages")
+        assert_true(pt_option.hover ~= option.hover, option.name .. " hover is translated")
+        assert_eq(option.options[1].description, "Enabled", option.name .. " English on label")
+        assert_eq(pt_option.options[1].description, "Ativado", option.name .. " Portuguese on label")
+    end
+    assert_eq(pt.configuration_options[2].label, "Trupe da Flauta", "Portuguese troupe label")
+    assert_eq(en.icon_atlas, "modicon.xml", "modinfo points at the icon atlas")
 end
 
 if failures > 0 then
