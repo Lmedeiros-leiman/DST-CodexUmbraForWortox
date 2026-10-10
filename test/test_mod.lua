@@ -98,6 +98,14 @@ local function load_mod(config, ismastersim, locale)
         env.entities_by_guid[inst.GUID] = inst
     end
 
+    -- strict.lua's global(): records declarations so tests can check them.
+    env.declared_globals = {}
+    env.GLOBAL.global = function(...)
+        for _, name in ipairs({ ... }) do
+            env.declared_globals[name] = true
+        end
+    end
+
     env.GLOBAL.net_smallbyte = function(guid, name, dirty_event)
         local netvar = { guid = guid, name = name, dirty_event = dirty_event, current = 0 }
         function netvar:set(value)
@@ -466,6 +474,10 @@ local function new_player(env)
     function petleash:GetMaxPets()
         return self.maxpets
     end
+    function petleash:SetMaxPetsForPrefab(prefab, value)
+        self.maxpetsperprefab = self.maxpetsperprefab or {}
+        self.maxpetsperprefab[prefab] = value
+    end
     function petleash:SetMaxPets(value)
         self.maxpets = value
     end
@@ -565,7 +577,10 @@ do
     assert_true(inst:HasTag("shadowmagic"), "server Wortox gets the shadowmagic tag")
     assert_eq(inst:HasTag("reader"), false, "Wortox does not get the reader tag")
     assert_eq(inst:HasTag("magician"), false, "Wortox does not get the magician tag")
-    assert_eq(inst.components.petleash:GetMaxPets(), 7, "server pet leash max increases from 1 to 7")
+    assert_eq(inst.components.petleash:GetMaxPets(), 1, "the shared pet pool keeps its vanilla size")
+    local limits = inst.components.petleash.maxpetsperprefab or {}
+    assert_eq(limits.shadowworker, 6, "shadow workers get their own pet limit")
+    assert_eq(limits.shadowprotector, 6, "shadow protectors get their own pet limit")
 
     local critter = inst.components.petleash:SpawnPetAt(0, 0, 0, "critter")
     assert_eq(inst.original_spawn_calls, 1, "original spawn callback handles non-shadow pets")
@@ -1102,6 +1117,95 @@ do
         end
         assert_eq(table.concat(values, ","), "auto,en,pt,zh,ru", "language offers auto, English, Portuguese, Chinese and Russian")
     end
+end
+
+-- Public API for the Codex Umbra for Everyone add-on.
+do
+    local env = load_mod({}, true)
+    local api = env.GLOBAL.CodexUmbraForWortox
+    assert_true(env.declared_globals.CodexUmbraForWortox, "the API name is declared for strict.lua")
+    assert_true(type(api) == "table" and api.version == 2, "the API table is published at version 2")
+    assert_eq(api.TINT_NONE, 0, "TINT_NONE keeps the vanilla look")
+    assert_eq(api.TINT_GESTALT, 5, "TINT_GESTALT is Wortox's Gestalt cell")
+    assert_eq(api.TINT_VOID_VIOLET, 10, "TINT_VOID_VIOLET follows the nine Wortox colours")
+
+    -- Another character opts in with allegiance-based colours.
+    local wilson = new_player(env)
+    wilson.prefab = "wilson"
+    local tint_index = api.TINT_NONE
+    local config = { tint = function() return tint_index end, mine = "CODEX_MINE", other = "CODEX_OTHER" }
+    api.EnableShadowCaster(wilson, config)
+    assert_true(wilson:HasTag("shadowmagic"), "the caster can craft and read the Codex")
+    assert_eq(wilson.components.petleash.maxpetsperprefab.shadowworker, 6, "the caster gets the shadow pet limits")
+
+    local plain = wilson.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
+    assert_eq(#plain.AnimState.add_colour_calls + #plain.AnimState.colour_calls, 0, "TINT_NONE leaves Maxwell's black")
+    assert_eq(plain._wortoxshen_tint:value(), 0, "TINT_NONE sends index 0")
+    assert_near(wilson.components.sanity.penalties[plain], .15, "the caster pays Maxwell's sanity cost")
+    local status = plain.components.inspectable.getstatus
+    assert_eq(status(plain, wilson), "CODEX_MINE", "the caster's own status comes from the config")
+    assert_eq(status(plain, { prefab = "willow" }), "CODEX_OTHER", "other viewers get the config's other status")
+
+    tint_index = api.TINT_VOID_VIOLET
+    local violet = wilson.components.petleash:SpawnPetAt(0, 0, 0, "shadowprotector")
+    assert_add(violet.AnimState.add_colour_calls, 0x4A1F80, .75, "void violet fill")
+    assert_eq(violet.AnimState.light_override, .3, "void violet uses the Shadow style")
+
+    -- config.other may pick the status per shadow.
+    local willow = new_player(env)
+    willow.prefab = "willow"
+    local seen
+    api.EnableShadowCaster(willow, { tint = function() return 0 end, mine = "CODEX_MINE",
+        other = function(pet, viewer, leader) seen = { pet, viewer, leader }; return "CODEX_OTHER_FEMALE" end })
+    local hers = willow.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
+    local viewer = { prefab = "wilson" }
+    assert_eq(hers.components.inspectable.getstatus(hers, viewer), "CODEX_OTHER_FEMALE", "a function picks the other status")
+    assert_true(seen ~= nil and seen[1] == hers and seen[2] == viewer and seen[3] == willow, "it gets the pet, viewer and leader")
+    assert_eq(hers.components.inspectable.getstatus(hers, willow), "CODEX_MINE", "the owner still gets the mine status")
+
+    -- Losing the allegiance (index back to TINT_NONE) restores the vanilla look.
+    tint_index = api.TINT_GESTALT
+    local glowing = wilson.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
+    assert_eq(glowing.AnimState.bloom, "shaders/anim.ksh", "a lunar caster's shadow glows")
+    tint_index = api.TINT_NONE
+    wilson:PushEvent("onactivateskill_server")
+    local anim = glowing.AnimState
+    local mult, add = anim.colour_calls[#anim.colour_calls], anim.add_colour_calls[#anim.add_colour_calls]
+    assert_eq(glowing._wortoxshen_tint:value(), 0, "the shadow is sent index 0")
+    assert_true(mult[1] == 0 and mult[2] == 0 and mult[3] == 0 and mult[4] == .5, "it gets Maxwell's black multiply back")
+    assert_true(add[1] == 0 and add[2] == 0 and add[3] == 0 and add[4] == 0, "its colour fill is removed")
+    assert_eq(anim.light_override, 0, "its light override is removed")
+    assert_eq(anim.bloom, nil, "its glow is removed")
+    local calls = #anim.colour_calls
+    wilson:PushEvent("onactivateskill_server")
+    assert_eq(#anim.colour_calls, calls, "an untinted shadow is not reset again")
+
+    local onspawn = wilson.components.petleash.onspawnfn
+    api.EnableShadowCaster(wilson, { tint = function() return 1 end, mine = "X", other = "Y" })
+    assert_eq(wilson.components.petleash.onspawnfn, onspawn, "enabling twice changes nothing")
+    assert_eq(wilson._codexumbra, config, "the first config stays")
+
+    local client_env = load_mod({}, false)
+    local client = new_player(client_env)
+    client_env.GLOBAL.CodexUmbraForWortox.EnableShadowCaster(client, config)
+    assert_true(client:HasTag("shadowmagic"), "clients get the tag for crafting and the spellbook")
+    assert_eq(client._codexumbra, nil, "clients skip the server-only setup")
+end
+
+-- Clients also reset a shadow whose index returns to 0, and leave vanilla
+-- shadows (never tinted) alone.
+do
+    local env = load_mod({ codex_umbra = true }, false)
+    local pet = new_pet("shadowworker", env)
+    get_prefab_postinit(env, "shadowworker")(pet)
+    assert_eq(#pet.AnimState.colour_calls, 0, "a vanilla client shadow is untouched at spawn")
+    pet._wortoxshen_tint:set(5)
+    assert_eq(pet.AnimState.bloom, "shaders/anim.ksh", "the client applies the gestalt glow")
+    pet._wortoxshen_tint:set(0)
+    assert_eq(pet.AnimState.bloom, nil, "the client removes the glow at index 0")
+    assert_eq(pet.AnimState.light_override, 0, "and the light override")
+    local mult = pet.AnimState.colour_calls[#pet.AnimState.colour_calls]
+    assert_true(mult[4] == .5 and mult[1] == 0, "and restores Maxwell's black multiply")
 end
 
 if failures > 0 then
