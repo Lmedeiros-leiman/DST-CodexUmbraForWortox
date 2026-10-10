@@ -4,7 +4,9 @@ local tint = wortox_shenanigans_tint
 -- Everyone add-on) carry a config set by EnableShadowCaster:
 --   tint(caster)  -> palette index from wortox_shenanigans_tint (0 = vanilla)
 --   mine, other   -> examine statuses for the caster's own shadow and for
---                    anyone else looking at it
+--                    anyone else looking at it; other may also be a function
+--                    (pet, viewer, leader) -> status, e.g. to vary the line
+--                    with the shadow owner's gender
 -- Wortox uses WORTOX_MINE / WORTOX_OTHER, the add-on CODEX_MINE / CODEX_OTHER.
 
 -- Vanilla shadow minions have no inspectable component, so nobody can examine
@@ -18,7 +20,12 @@ local function MakeInspectable(pet, config)
     end
     pet.components.inspectable.getstatus = function(inst, viewer)
         local leader = inst.components.follower ~= nil and inst.components.follower:GetLeader() or nil
-        return leader ~= nil and leader == viewer and config.mine or config.other
+        if leader ~= nil and leader == viewer then
+            return config.mine
+        elseif type(config.other) == "function" then
+            return config.other(inst, viewer, leader)
+        end
+        return config.other
     end
 end
 
@@ -316,7 +323,8 @@ end)
 GLOBAL.global("CodexUmbraForWortox")
 GLOBAL.CodexUmbraForWortox =
 {
-    version = 1,
+    -- 2: config.other may be a function.
+    version = 2,
     EnableShadowCaster = EnableShadowCaster,
     SetShadowDescription = SetShadowDescription,
     TINT_NONE = tint.TINT_NONE,

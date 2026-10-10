@@ -216,7 +216,7 @@ O texto da lista de mods e as falas do Wortox estão em inglês, português (Bra
 
 The Codex Umbra module publishes an API used by the Codex Umbra for Everyone add-on. Read it with `rawget(GLOBAL, "CodexUmbraForWortox")` (it is absent when this mod or its Codex Umbra option is off):
 
-- `EnableShadowCaster(inst, config)`: lets a character craft and use the Codex Umbra like Maxwell. `config.tint(inst)` returns a palette index; `config.mine` / `config.other` are the examine statuses for the caster's own shadow and for other viewers. Safe to call on both sides and more than once.
+- `EnableShadowCaster(inst, config)`: lets a character craft and use the Codex Umbra like Maxwell. `config.tint(inst)` returns a palette index; `config.mine` / `config.other` are the examine statuses for the caster's own shadow and for other viewers (`config.other` may be a function `(pet, viewer, leader)` returning the status). Safe to call on both sides and more than once. `version` is 2.
 - `SetShadowDescription(character, status, line)`: sets a character's line for a shadow examine status.
 - `TINT_NONE` (Maxwell's vanilla black), `TINT_GESTALT`, `TINT_VOID_VIOLET`: palette indices for allegiance colours.
 

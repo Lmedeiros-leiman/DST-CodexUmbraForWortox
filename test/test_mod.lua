@@ -1124,7 +1124,7 @@ do
     local env = load_mod({}, true)
     local api = env.GLOBAL.CodexUmbraForWortox
     assert_true(env.declared_globals.CodexUmbraForWortox, "the API name is declared for strict.lua")
-    assert_true(type(api) == "table" and api.version == 1, "the API table is published")
+    assert_true(type(api) == "table" and api.version == 2, "the API table is published at version 2")
     assert_eq(api.TINT_NONE, 0, "TINT_NONE keeps the vanilla look")
     assert_eq(api.TINT_GESTALT, 5, "TINT_GESTALT is Wortox's Gestalt cell")
     assert_eq(api.TINT_VOID_VIOLET, 10, "TINT_VOID_VIOLET follows the nine Wortox colours")
@@ -1150,6 +1150,18 @@ do
     local violet = wilson.components.petleash:SpawnPetAt(0, 0, 0, "shadowprotector")
     assert_add(violet.AnimState.add_colour_calls, 0x4A1F80, .75, "void violet fill")
     assert_eq(violet.AnimState.light_override, .3, "void violet uses the Shadow style")
+
+    -- config.other may pick the status per shadow.
+    local willow = new_player(env)
+    willow.prefab = "willow"
+    local seen
+    api.EnableShadowCaster(willow, { tint = function() return 0 end, mine = "CODEX_MINE",
+        other = function(pet, viewer, leader) seen = { pet, viewer, leader }; return "CODEX_OTHER_FEMALE" end })
+    local hers = willow.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
+    local viewer = { prefab = "wilson" }
+    assert_eq(hers.components.inspectable.getstatus(hers, viewer), "CODEX_OTHER_FEMALE", "a function picks the other status")
+    assert_true(seen ~= nil and seen[1] == hers and seen[2] == viewer and seen[3] == willow, "it gets the pet, viewer and leader")
+    assert_eq(hers.components.inspectable.getstatus(hers, willow), "CODEX_MINE", "the owner still gets the mine status")
 
     local onspawn = wilson.components.petleash.onspawnfn
     api.EnableShadowCaster(wilson, { tint = function() return 1 end, mine = "X", other = "Y" })
