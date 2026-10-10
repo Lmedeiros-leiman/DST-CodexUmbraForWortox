@@ -129,6 +129,35 @@ local function ApplyFxTint(inst, tint)
     ApplyGlow(inst, tint)
 end
 
+-- Back to the vanilla look when a tinted entity's index returns to
+-- TINT_NONE (e.g. a respec drops the caster's allegiance). Minions get
+-- Maxwell's black multiply back; the fx keep their own vanilla multiply.
+local function ResetGlow(inst)
+    inst.AnimState:SetAddColour(0, 0, 0, 0)
+    inst.AnimState:SetLightOverride(0)
+    inst.AnimState:ClearBloomEffectHandle()
+end
+
+local function ResetMinionTint(inst)
+    inst.AnimState:SetMultColour(0, 0, 0, .5)
+    ResetGlow(inst)
+end
+
+local RESETS = { [ApplyMinionTint] = ResetMinionTint, [ApplyFxTint] = ResetGlow }
+
+-- Applies a palette index. Index 0 only resets an entity this mod tinted
+-- before, so vanilla entities are never touched.
+local function ApplyIndex(inst, index, apply)
+    local tint = TINTS[index]
+    if tint ~= nil then
+        apply(inst, tint)
+        inst._wortoxshen_tinted = true
+    elseif inst._wortoxshen_tinted then
+        RESETS[apply](inst)
+        inst._wortoxshen_tinted = nil
+    end
+end
+
 local function GetTint(inst)
     return inst._wortoxshen_tint ~= nil and inst._wortoxshen_tint:value() or 0
 end
@@ -141,10 +170,7 @@ local function SetupTint(inst, apply)
 
     if not GLOBAL.TheWorld.ismastersim then
         local function OnTintDirty(inst_)
-            local tint = TINTS[GetTint(inst_)]
-            if tint ~= nil then
-                apply(inst_, tint)
-            end
+            ApplyIndex(inst_, GetTint(inst_), apply)
         end
         inst:ListenForEvent("wortoxshen_tintdirty", OnTintDirty)
         -- Entities already tinted when they enter view carry the value in their initial state.
@@ -157,10 +183,7 @@ local function SetTint(inst, index, apply)
         inst._wortoxshen_tint:set(index)
     end
     -- Also applied on the server, which renders for a listen-server host.
-    -- TINT_NONE keeps the vanilla look.
-    if TINTS[index] ~= nil then
-        apply(inst, TINTS[index])
-    end
+    ApplyIndex(inst, index, apply)
 end
 
 for _, prefab in ipairs(SHADOW_MINION_PREFABS) do

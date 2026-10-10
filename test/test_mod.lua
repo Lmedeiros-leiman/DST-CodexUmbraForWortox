@@ -1163,6 +1163,23 @@ do
     assert_true(seen ~= nil and seen[1] == hers and seen[2] == viewer and seen[3] == willow, "it gets the pet, viewer and leader")
     assert_eq(hers.components.inspectable.getstatus(hers, willow), "CODEX_MINE", "the owner still gets the mine status")
 
+    -- Losing the allegiance (index back to TINT_NONE) restores the vanilla look.
+    tint_index = api.TINT_GESTALT
+    local glowing = wilson.components.petleash:SpawnPetAt(0, 0, 0, "shadowworker")
+    assert_eq(glowing.AnimState.bloom, "shaders/anim.ksh", "a lunar caster's shadow glows")
+    tint_index = api.TINT_NONE
+    wilson:PushEvent("onactivateskill_server")
+    local anim = glowing.AnimState
+    local mult, add = anim.colour_calls[#anim.colour_calls], anim.add_colour_calls[#anim.add_colour_calls]
+    assert_eq(glowing._wortoxshen_tint:value(), 0, "the shadow is sent index 0")
+    assert_true(mult[1] == 0 and mult[2] == 0 and mult[3] == 0 and mult[4] == .5, "it gets Maxwell's black multiply back")
+    assert_true(add[1] == 0 and add[2] == 0 and add[3] == 0 and add[4] == 0, "its colour fill is removed")
+    assert_eq(anim.light_override, 0, "its light override is removed")
+    assert_eq(anim.bloom, nil, "its glow is removed")
+    local calls = #anim.colour_calls
+    wilson:PushEvent("onactivateskill_server")
+    assert_eq(#anim.colour_calls, calls, "an untinted shadow is not reset again")
+
     local onspawn = wilson.components.petleash.onspawnfn
     api.EnableShadowCaster(wilson, { tint = function() return 1 end, mine = "X", other = "Y" })
     assert_eq(wilson.components.petleash.onspawnfn, onspawn, "enabling twice changes nothing")
@@ -1173,6 +1190,22 @@ do
     client_env.GLOBAL.CodexUmbraForWortox.EnableShadowCaster(client, config)
     assert_true(client:HasTag("shadowmagic"), "clients get the tag for crafting and the spellbook")
     assert_eq(client._codexumbra, nil, "clients skip the server-only setup")
+end
+
+-- Clients also reset a shadow whose index returns to 0, and leave vanilla
+-- shadows (never tinted) alone.
+do
+    local env = load_mod({ codex_umbra = true }, false)
+    local pet = new_pet("shadowworker", env)
+    get_prefab_postinit(env, "shadowworker")(pet)
+    assert_eq(#pet.AnimState.colour_calls, 0, "a vanilla client shadow is untouched at spawn")
+    pet._wortoxshen_tint:set(5)
+    assert_eq(pet.AnimState.bloom, "shaders/anim.ksh", "the client applies the gestalt glow")
+    pet._wortoxshen_tint:set(0)
+    assert_eq(pet.AnimState.bloom, nil, "the client removes the glow at index 0")
+    assert_eq(pet.AnimState.light_override, 0, "and the light override")
+    local mult = pet.AnimState.colour_calls[#pet.AnimState.colour_calls]
+    assert_true(mult[4] == .5 and mult[1] == 0, "and restores Maxwell's black multiply")
 end
 
 if failures > 0 then
