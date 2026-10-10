@@ -1,20 +1,25 @@
 local tint = wortox_shenanigans_tint
 
--- Vanilla shadow minions have no inspectable component, so nobody can examine
--- them. Wortox's can: the leader sees WORTOX_MINE, everyone else (another
--- Wortox included) sees WORTOX_OTHER. The strings live under the minions'
--- name override, SHADOWWAXWELL, and only use these statuses, so Maxwell's
--- shadows never pick up these lines.
-local function GetShadowStatus(inst, viewer)
-    local leader = inst.components.follower ~= nil and inst.components.follower:GetLeader() or nil
-    return leader ~= nil and leader == viewer and "WORTOX_MINE" or "WORTOX_OTHER"
-end
+-- Shadow casters (Wortox here, everyone else through the Codex Umbra for
+-- Everyone add-on) carry a config set by EnableShadowCaster:
+--   tint(caster)  -> palette index from wortox_shenanigans_tint (0 = vanilla)
+--   mine, other   -> examine statuses for the caster's own shadow and for
+--                    anyone else looking at it
+-- Wortox uses WORTOX_MINE / WORTOX_OTHER, the add-on CODEX_MINE / CODEX_OTHER.
 
-local function MakeInspectable(pet)
+-- Vanilla shadow minions have no inspectable component, so nobody can examine
+-- them. A caster's shadows can: the leader sees the "mine" status, everyone
+-- else the "other" one. The strings live under the minions' name override,
+-- SHADOWWAXWELL, and only use these statuses, so Maxwell's shadows never pick
+-- up these lines.
+local function MakeInspectable(pet, config)
     if pet.components.inspectable == nil then
         pet:AddComponent("inspectable")
     end
-    pet.components.inspectable.getstatus = GetShadowStatus
+    pet.components.inspectable.getstatus = function(inst, viewer)
+        local leader = inst.components.follower ~= nil and inst.components.follower:GetLeader() or nil
+        return leader ~= nil and leader == viewer and config.mine or config.other
+    end
 end
 
 local function KillPet(pet)
@@ -27,8 +32,9 @@ end
 
 local function OnSpawnPet(inst, pet)
     if pet:HasTag("shadowminion") then
-        tint.SetTint(pet, tint.GetTintIndex(inst), tint.ApplyMinionTint)
-        MakeInspectable(pet)
+        local config = inst._codexumbra
+        tint.SetTint(pet, config.tint(inst), tint.ApplyMinionTint)
+        MakeInspectable(pet, config)
         if not (inst.components.health:IsDead() or inst:HasTag("playerghost")) then
             inst.components.sanity:AddSanityPenalty(pet,
                 GLOBAL.TUNING.SHADOWWAXWELL_SANITY_PENALTY[string.upper(pet.prefab)])
@@ -110,7 +116,7 @@ end
 -- Skill changes recolour shadows that are already out. Wortox's own
 -- listeners run first, so wortox_inclination is current by then.
 local function RetintShadowMinions(inst)
-    local index = tint.GetTintIndex(inst)
+    local index = inst._codexumbra.tint(inst)
     for _, pet in pairs(inst.components.petleash:GetPets()) do
         if pet:HasTag("shadowminion") then
             tint.SetTint(pet, index, tint.ApplyMinionTint)
@@ -227,22 +233,38 @@ SetShadowDescription("WAXWELL", "WORTOX_OTHER", lines.shadow_maxwell)
 -- Everyone else falls back to the generic (Wilson) table.
 SetShadowDescription("GENERIC", "WORTOX_OTHER", lines.shadow_generic)
 
-AddPrefabPostInit("wortox", function(inst)
+-- Shadow types the Codex spells summon, each with its own pet limit. Kept
+-- apart from the shared pet pool so critters, Woby, Wormwood's plants and
+-- WX-78's drones keep their own limits. The 90% max sanity cap allows six
+-- shadows in total anyway.
+local SHADOW_PET_LIMITS =
+{
+    shadowworker = 6,
+    shadowprotector = 6,
+}
+
+-- Lets a character craft and use the Codex Umbra like Maxwell. Runs on both
+-- sides: the tag unlocks crafting and the spellbook on clients too. Calling
+-- it twice on one character does nothing the second time.
+local function EnableShadowCaster(inst, config)
     inst:AddTag("shadowmagic")
 
-    if not GLOBAL.TheWorld.ismastersim then
+    if not GLOBAL.TheWorld.ismastersim or inst._codexumbra ~= nil then
         return
     end
+    inst._codexumbra = config
 
     local petleash = inst.components.petleash
     if petleash == nil then
         inst:AddComponent("petleash")
         petleash = inst.components.petleash
-        petleash:SetMaxPets(6)
+        petleash:SetMaxPets(0)
     else
         inst._wortoxshen_onspawnpet = petleash.onspawnfn
         inst._wortoxshen_ondespawnpet = petleash.ondespawnfn
-        petleash:SetMaxPets(petleash:GetMaxPets() + 6)
+    end
+    for prefab, limit in pairs(SHADOW_PET_LIMITS) do
+        petleash:SetMaxPetsForPrefab(prefab, limit)
     end
 
     if inst._onpetlost == nil then
@@ -258,7 +280,6 @@ AddPrefabPostInit("wortox", function(inst)
     inst:ListenForEvent("ms_becameghost", OnBecameGhost)
     inst:ListenForEvent("ms_playerreroll", ForceDespawnShadowMinions)
     inst:ListenForEvent("onskinschanged", OnSkinsChanged)
-    inst:ListenForEvent("wortox_inclination_changed", RetintShadowMinions)
     inst:ListenForEvent("onactivateskill_server", RetintShadowMinions)
     inst:ListenForEvent("ondeactivateskill_server", RetintShadowMinions)
     inst:ListenForEvent("ms_skilltreeinitialized", RetintShadowMinions)
@@ -276,4 +297,29 @@ AddPrefabPostInit("wortox", function(inst)
     inst.OnLoad = function(inst_, ...)
         return OnLoad(inst_, original_onload, ...)
     end
+end
+
+AddPrefabPostInit("wortox", function(inst)
+    EnableShadowCaster(inst, {
+        tint = tint.GetTintIndex,
+        mine = "WORTOX_MINE",
+        other = "WORTOX_OTHER",
+    })
+    if GLOBAL.TheWorld.ismastersim then
+        inst:ListenForEvent("wortox_inclination_changed", RetintShadowMinions)
+    end
 end)
+
+-- Public API for the Codex Umbra for Everyone add-on. Declared through
+-- strict.lua's global() so the assignment is legal from mod code; readers
+-- should use rawget(GLOBAL, "CodexUmbraForWortox") in case this mod is off.
+GLOBAL.global("CodexUmbraForWortox")
+GLOBAL.CodexUmbraForWortox =
+{
+    version = 1,
+    EnableShadowCaster = EnableShadowCaster,
+    SetShadowDescription = SetShadowDescription,
+    TINT_NONE = tint.TINT_NONE,
+    TINT_GESTALT = tint.TINT_GESTALT,
+    TINT_VOID_VIOLET = tint.TINT_VOID_VIOLET,
+}

@@ -44,19 +44,31 @@ local BLOOM_SHADER = "shaders/anim.ksh"
 -- Flattened row by row to indices 1..9 so one small network byte carries
 -- the tint.
 local TINTS = {}
+local function AddTint(hex, style)
+    table.insert(TINTS, {
+        r = math.floor(hex / 0x10000) % 0x100 / 255,
+        g = math.floor(hex / 0x100) % 0x100 / 255,
+        b = hex % 0x100 / 255,
+        alpha = style.alpha,
+        light = style.light,
+        bloom = style.bloom,
+    })
+    return #TINTS
+end
+
 for _, row in ipairs(PALETTE) do
     for column, hex in ipairs(row) do
-        local style = ALLEGIANCE_STYLE[column]
-        table.insert(TINTS, {
-            r = math.floor(hex / 0x10000) % 0x100 / 255,
-            g = math.floor(hex / 0x100) % 0x100 / 255,
-            b = hex % 0x100 / 255,
-            alpha = style.alpha,
-            light = style.light,
-            bloom = style.bloom,
-        })
+        AddTint(hex, ALLEGIANCE_STYLE[column])
     end
 end
+
+-- Shared with other characters through the Codex Umbra for Everyone add-on,
+-- which colours shadows by allegiance only: none keeps Maxwell's vanilla
+-- black (index 0, no tint), Lunar reuses Wortox's Gestalt cyan and Shadow
+-- gets a void violet. Indices stay fixed so both mods agree on every client.
+local TINT_NONE = 0
+local TINT_GESTALT = (LEAN_ROW.neutral - 1) * #PALETTE[1] + ALLEGIANCE_COLUMN.lunar
+local TINT_VOID_VIOLET = AddTint(0x4A1F80, ALLEGIANCE_STYLE[ALLEGIANCE_COLUMN.shadow])
 
 -- wortox_inclination is "nice", "naughty" or nil (balanced), kept up to date
 -- by Wortox's own skill tree listeners.
@@ -145,7 +157,10 @@ local function SetTint(inst, index, apply)
         inst._wortoxshen_tint:set(index)
     end
     -- Also applied on the server, which renders for a listen-server host.
-    apply(inst, TINTS[index])
+    -- TINT_NONE keeps the vanilla look.
+    if TINTS[index] ~= nil then
+        apply(inst, TINTS[index])
+    end
 end
 
 for _, prefab in ipairs(SHADOW_MINION_PREFABS) do
@@ -196,4 +211,7 @@ wortox_shenanigans_tint =
     GetTintIndex = GetTintIndex,
     SetTint = SetTint,
     ApplyMinionTint = ApplyMinionTint,
+    TINT_NONE = TINT_NONE,
+    TINT_GESTALT = TINT_GESTALT,
+    TINT_VOID_VIOLET = TINT_VOID_VIOLET,
 }

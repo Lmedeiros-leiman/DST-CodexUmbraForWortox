@@ -35,7 +35,7 @@ Trupe da Flauta: ao tocar a flauta de pã carregando o Codex Umbra, o Wortox inv
 Труппа флейты: если сыграть на флейте Пана с Кодексом Умбра при себе, Вортокс призовёт трёх теневых танцоров своего цвета, которые потанцуют несколько секунд и исчезнут.]],
 }
 author = "Leonardo"
-version = "0.1.0"
+version = "0.2.0"
 
 forumthread = ""
 

@@ -212,6 +212,16 @@ O texto da lista de mods e as falas do Wortox estão em inglês, português (Bra
 - Быстрая вспышка при появлении тени без анимации и вспышка при смене скина остаются чёрными: их графика существует только у клиентов, и мод не может её окрасить.
 - Мод добавляет тег `shadowmagic`, поэтому появляется и вкладка теневого крафта Максвелла. Рецепты цилиндра и сундука фокусника видны, но у Вортокса нет способностей фокусника, так что цилиндр работает как обычная шляпа.
 
+## For mod authors / Para autores de mods
+
+The Codex Umbra module publishes an API used by the Codex Umbra for Everyone add-on. Read it with `rawget(GLOBAL, "CodexUmbraForWortox")` (it is absent when this mod or its Codex Umbra option is off):
+
+- `EnableShadowCaster(inst, config)`: lets a character craft and use the Codex Umbra like Maxwell. `config.tint(inst)` returns a palette index; `config.mine` / `config.other` are the examine statuses for the caster's own shadow and for other viewers. Safe to call on both sides and more than once.
+- `SetShadowDescription(character, status, line)`: sets a character's line for a shadow examine status.
+- `TINT_NONE` (Maxwell's vanilla black), `TINT_GESTALT`, `TINT_VOID_VIOLET`: palette indices for allegiance colours.
+
+Each shadow type (worker, protector) has its own pet limit, so the shared pet pool used by critters, Woby, Wormwood's plants and WX-78's drones is untouched.
+
 ## Tests / Testes / 测试 / Тесты
 
 Requires Lua 5.1. / Requer Lua 5.1. / 需要 Lua 5.1。 / Требуется Lua 5.1.
