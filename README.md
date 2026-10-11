@@ -4,6 +4,15 @@
 
 [English](#english) · [Português](#português) · [简体中文](#简体中文) · [Русский](#русский)
 
+> [!IMPORTANT]
+> **This mod is deprecated and this repository is archived.** Everything it did is now part of **[Codex Umbra for Everyone](https://github.com/Lmedeiros-leiman/DST-CodexUmbraForEveryone)**, which lets every character use the Codex Umbra and keeps Wortox's colours, lines and panflute troupe. The [Steam Workshop item](https://steamcommunity.com/sharedfiles/filedetails/?id=3816756986) now carries that mod.
+>
+> **Este mod foi descontinuado e este repositório está arquivado.** Tudo o que ele fazia agora faz parte do **[Codex Umbra para Todos](https://github.com/Lmedeiros-leiman/DST-CodexUmbraForEveryone)**.
+>
+> **本模组已停止维护，此仓库已归档。** 它的全部功能现已并入 **[人人可用的暗影秘典](https://github.com/Lmedeiros-leiman/DST-CodexUmbraForEveryone)**。
+>
+> **Этот мод больше не поддерживается, репозиторий архивирован.** Всё, что он делал, теперь входит в **[«Кодекс Умбра для всех»](https://github.com/Lmedeiros-leiman/DST-CodexUmbraForEveryone)**.
+
 ## English
 
 A Don't Starve Together mod that teaches Wortox Maxwell's shadow magic.
